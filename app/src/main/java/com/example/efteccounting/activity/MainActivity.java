@@ -52,14 +52,14 @@ public class MainActivity extends BaseActivity {
         recyclerView.setLayoutManager(new GridLayoutManager(this,2));
         View v = LayoutInflater.from(this).inflate(R.layout.top_iv,null);
         FunctionType functionType=new FunctionType();
-        functionType.des="盘点";
-        functionType.img=R.mipmap.p1;
+        functionType.des="收货入库";
+        functionType.img=R.mipmap.p2;
         FunctionType functionType1=new FunctionType();
         functionType1.des="设置";
         functionType1.img=R.mipmap.p4;
         FunctionType functionType2=new FunctionType();
-        functionType2.des="导入";
-        functionType2.img=R.mipmap.p2;
+        functionType2.des="发货出库";
+        functionType2.img=R.mipmap.p3;
         FunctionType functionType3=new FunctionType();
         functionType3.des="导出";
         functionType3.img=R.mipmap.p3;
@@ -110,9 +110,10 @@ public class MainActivity extends BaseActivity {
             public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
                 switch (position) {
                     case 0:
-                       /* Intent intent = new Intent(com.honeywell.android.rfidemcounting.MainActivity.this, EMListActivity.class);
+                        //入库
+                       Intent intent = new Intent(MainActivity.this, MainActivity.class);
                         startActivity(intent);
-                        CommonUtil.openNewActivityAnim(com.honeywell.android.rfidemcounting.MainActivity.this, false);*/
+                        CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
                     case 3:
                         break;
