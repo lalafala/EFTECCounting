@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <include layout="@layout/app_title" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:background="@mipmap/lanch"
+            android:layout_gravity="center"
+            android:layout_marginTop="30dp"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="30dp"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/username"
+                android:layout_width="match_parent"
+                android:layout_height="48sp"
+                android:hint="请输入用户名"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_edittext"
+                android:paddingLeft="8dp"
+                android:paddingRight="8sp"
+                android:singleLine="true"
+                android:textSize="20sp" />
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="match_parent"
+                android:layout_height="48sp"
+                android:hint="请输入密码"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_edittext"
+                android:paddingLeft="8dp"
+                android:paddingRight="8sp"
+                android:singleLine="true"
+                android:textSize="20sp" />
+
+        </LinearLayout>
+        <org.angmarch.views.NiceSpinner
+            android:layout_width="match_parent"
+            android:layout_height="48sp"
+            android:id="@+id/nice_spiner"
+            android:hint="点击选择库房列表"
+            android:textSize="20sp"
+            android:background="@color/gray_border"
+
+            android:layout_marginLeft="13dp"
+            android:layout_marginRight="22dp"
+            app:popupTextAlignment="start"
+            />
+        <Button
+            android:id="@+id/bt_login"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_gravity="left"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="30dp"
+            android:background="@drawable/shape_button"
+            android:text="登  录"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/bt_set"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_gravity="left"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="30dp"
+            android:background="@drawable/shape_button"
+            android:text="设  置"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/info"
+            android:layout_width="match_parent"
+            android:layout_height="48sp"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:singleLine="true"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>
