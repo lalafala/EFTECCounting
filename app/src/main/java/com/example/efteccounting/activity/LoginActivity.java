@@ -1,5 +1,7 @@
 package com.example.efteccounting.activity;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -41,18 +43,26 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.SPUtils;
+import utils.ToastUtils;
 
 public class LoginActivity extends BaseActivity {
     private static String TAG="LoginActivity";
     private long mExitTime = 0;
-    private Map<String,String> warehouseidMaps=new HashMap<>();
-    List<String> dataset = new LinkedList<>();
+    private Map<String,String> warehouseidMaps;
+    private List<String> dataset ;
     private NiceSpinner niceSpinner ;
     @BindView(R.id.bt_login)
     public Button bt_login;
-    private TextView info;
+
+    @BindView(R.id.bt_reload)
+    public Button bt_reload;
+    @BindView(R.id.info)
+    TextView info;
     private EditText username;
     private EditText password;
+    Dialog loadingDialog;
+    private boolean canLogin=false;
     @Override
     protected int attachLayoutRes() {
         return R.layout.activity_login;
@@ -60,6 +70,12 @@ public class LoginActivity extends BaseActivity {
 
     @Override
     public void setListener() {
+        bt_reload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                loadData();
+            }
+        });
 
         niceSpinner.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener() {
             @Override
@@ -73,96 +89,86 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 //登录信息验证
-                String login_user=username.getText().toString();
-                String password_user=password.getText().toString();
-                String warhouse=niceSpinner.getText().toString();
-                String warhouseid=warehouseidMaps.get(warhouse).toString();
-                Log.v(TAG,login_user+" "+password_user+" "+warhouseid);
-                if ( !login_user.equals("") && !password_user.equals("") && !warhouseid.equals("")){
-                    String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/UserLogin";
-                    OkHttpClient okHttpClient = new OkHttpClient();
-                    okHttpClient.sslSocketFactory();
-                    RequestBody body = new FormBody.Builder()
-                            .add("User",login_user)
-                            .add("Password",password_user)
-                            .add("WarehouseCode",warhouseid).build();
-                    final Request request = new Request.Builder()
-                            .url(url)
-                            .post(body)//默认就是GET请求，可以不写
-                            .build();
-                    Call call = okHttpClient.newCall(request);
-                    call.enqueue(new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            Log.d(TAG, "onFailure: "+e.getMessage());
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-
-                            String warehouseIds=response.body().string();
-                            Document document = null;
-                            try {
-                                document = DocumentHelper.parseText(warehouseIds);
-                            } catch (DocumentException e) {
-                                e.printStackTrace();
+                if (canLogin) {
+                    String login_user = username.getText().toString();
+                    String password_user = password.getText().toString();
+                    String warhouse = niceSpinner.getText().toString();
+                    String warhouseid = warehouseidMaps.get(warhouse).toString();
+                    Log.v(TAG, login_user + " " + password_user + " " + warhouseid);
+                    if (!login_user.equals("") && !password_user.equals("") && !warhouseid.equals("")) {
+                        loadingDialog = new ProgressDialog(LoginActivity.this);
+                        loadingDialog.setTitle("登录...");
+                        loadingDialog.setCancelable(false);
+                        loadingDialog.show();
+                        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/UserLogin";
+                        OkHttpClient okHttpClient = new OkHttpClient();
+                        okHttpClient.sslSocketFactory();
+                        RequestBody body = new FormBody.Builder()
+                                .add("User", login_user)
+                                .add("Password", password_user)
+                                .add("WarehouseCode", warhouseid).build();
+                        final Request request = new Request.Builder()
+                                .url(url)
+                                .post(body)//默认就是GET请求，可以不写
+                                .build();
+                        Call call = okHttpClient.newCall(request);
+                        call.enqueue(new Callback() {
+                            @Override
+                            public void onFailure(Call call, IOException e) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.d(TAG, "onFailure: " + e.getMessage());
+                                        loadingDialog.dismiss();
+                                        showToast("连接服务器失败，请检查网络或者设置服务器地址");
+                                    }
+                                });
                             }
-                            Element element= document.getRootElement();
-                            if (element.getData().toString().equals("true")){
 
-                       Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        CommonUtil.openNewActivityAnim(LoginActivity.this, false);
-                            }else {
-                                info.setText("请核对库房，账号密码!");
+                            @Override
+                            public void onResponse(Call call, Response response) throws IOException {
+
+                                String warehouseIds = response.body().string();
+                                Document document = null;
+                                try {
+                                    document = DocumentHelper.parseText(warehouseIds);
+                                } catch (DocumentException e) {
+                                    e.printStackTrace();
+                                }
+                                Element element = document.getRootElement();
+                                if (element.getData().toString().equals("true")) {
+                                    SPUtils.put("current_username", login_user);
+                                    SPUtils.put("warehouse_id", warhouseid);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            loadingDialog.dismiss();
+                                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                            startActivity(intent);
+                                            CommonUtil.openNewActivityAnim(LoginActivity.this, false);
+                                        }
+                                    });
+                                } else {
+                                    loadingDialog.dismiss();
+                                    info.setText("请核对库房，账号密码!");
                                 }
 
-                        }
-                    });
+                            }
+                        });
+                    } else {
+                        Toast.makeText(getApplicationContext(), "请输入用户名", Toast.LENGTH_SHORT).show();
+                    }
                 }else {
-                    Toast.makeText(getApplicationContext(),"请输入用户名", Toast.LENGTH_SHORT).show();
+                    showToast("查看网络连接!");
                 }
             }
         });
-    }
 
+    }
     @Override
     public void initData() {
         super.initData();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetWarehouseID";
-        OkHttpClient okHttpClient = new OkHttpClient();
-        okHttpClient.sslSocketFactory();
-        final Request request = new Request.Builder()
-                .url(url)
-                .get()//默认就是GET请求，可以不写
-                .build();
-        Call call = okHttpClient.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.d(TAG, "onFailure: "+e.getMessage());
-            }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-
-                String warehouseIds=response.body().string();
-                try {
-                    Document document = DocumentHelper.parseText(warehouseIds);
-                  Element element= document.getRootElement();
-                  String ids[]=element.getData().toString().split(";");
-                  for (int i=0;i<ids.length;i++){
-                      warehouseidMaps.put(ids[i].substring(ids[i].indexOf("/")+1,ids[i].length()),ids[i].substring(0,ids[i].indexOf("/")));
-                      dataset.add(ids[i].substring(ids[i].indexOf("/")+1,ids[i].length()));
-                  }
-                    niceSpinner.attachDataSource(dataset);
-                  Log.v(TAG,warehouseidMaps.toString());
-                } catch (DocumentException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
 
     }
 
@@ -183,14 +189,72 @@ public class LoginActivity extends BaseActivity {
             finish();
         }
     }
+    private void loadData(){
+         warehouseidMaps=new HashMap<>();
+         dataset = new LinkedList<>();
+        loadingDialog=   new ProgressDialog(LoginActivity.this);
+        loadingDialog.setTitle("获取库房信息");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetWarehouseID";
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.sslSocketFactory();
+        final Request request = new Request.Builder()
+                .url(url)
+                .get()//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "onFailure: " + e.getMessage());
+                        loadingDialog.dismiss();
+                        showToast("连接服务器失败，请检查网络或者设置服务器地址");
+                    }
+                });
+            }
 
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                String warehouseIds=response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Document document = DocumentHelper.parseText(warehouseIds);
+                            Element element = document.getRootElement();
+                            String ids[] = element.getData().toString().split(";");
+                            for (int i = 0; i < ids.length; i++) {
+                                warehouseidMaps.put(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()), ids[i].substring(0, ids[i].indexOf("/")));
+                                dataset.add(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()));
+                            }
+                            niceSpinner.attachDataSource(dataset);
+                            Log.v(TAG, warehouseidMaps.toString());
+                            canLogin = true;
+                            loadingDialog.dismiss();
+                        } catch (DocumentException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+            }
+        });
+    }
     @Override
     public void initView() {
         super.initView();
+        ToastUtils.init(this);
         niceSpinner= (NiceSpinner)findViewById(R.id.nice_spiner);
         username=(EditText)findViewById(R.id.username);
+        username.setText("EFT003");
         password=(EditText)findViewById(R.id.password);
-        info=(TextView)findViewById(R.id.info);
+        password.setText("12345");
+        loadData();
     }
 
     @Override

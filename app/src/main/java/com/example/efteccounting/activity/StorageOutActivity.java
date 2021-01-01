@@ -1,0 +1,387 @@
+package com.example.efteccounting.activity;
+
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
+
+import com.example.efteccounting.R;
+
+import org.angmarch.views.NiceSpinner;
+import org.angmarch.views.OnSpinnerItemSelectedListener;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import bean.Constants;
+import butterknife.BindView;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import utils.CommonUtil;
+import utils.SPUtils;
+import utils.ToastUtils;
+
+public class StorageOutActivity extends  BaseActivity{
+    private final static String ACTION_HONEYWLL = "com.honeywell";
+    private static final String TAG = "StorageOutActivity";
+    private String current_username;
+    private String warehouse_id;
+    private int count=1;
+    private boolean isorderNo =true;
+    private Map<String,String> warehouseidMaps=new HashMap<>();
+    List<String> dataset = new LinkedList<>();
+    @BindView(R.id.OrderNumber)
+    TextView OrderNumber;
+    @BindView(R.id.Barcode)
+    EditText Barcode;
+    @BindView(R.id.Count)
+    EditText Count;
+    @BindView(R.id.infos)
+    EditText infos;
+    @BindView(R.id.post)
+    Button post;
+    @BindView(R.id.reset)
+    Button reset;
+    @BindView(R.id.nice_spiner)
+    NiceSpinner niceSpinner;
+    private String barcode="";
+    private String info="";
+    private String wareto;
+    private Dialog loadingDialog;
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(ACTION_HONEYWLL)) {
+                if (intent.hasExtra("data")) {
+                    final String decode = intent.getStringExtra("data");
+                    Log.v(TAG, decode);
+                    if (niceSpinner.getText().toString().equals("")){
+                        showToast("先选择库房");
+                        return;
+                    }
+                    if (isorderNo){
+                        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+                        normalDialog.setCancelable(false);
+                        normalDialog.setTitle("信息确认");
+                        normalDialog.setMessage("订单号:"+decode+"\n对应的仓库为:"+niceSpinner.getText().toString());
+                        normalDialog.setPositiveButton("确定",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        OrderNumber.setText(decode);
+                                        OrderNumber.setEnabled(false);
+                                        isorderNo=false;
+                                    }
+                                });
+                        normalDialog.setNegativeButton("取消",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                });
+
+                        normalDialog.show();
+
+                    }else {
+                        if (barcode.equals("")) {
+                            String infosString[]=decode.split(";");
+                            if (infosString.length==6) {
+                                barcode=decode;
+                                Barcode.setText(decode);
+                                OrderNumber.setEnabled(false);
+                                Count.setText(String.valueOf(count));
+                                count++;
+                                Count.setEnabled(false);
+                                for (int i = 0; i < infosString.length; i++) {
+                                    switch (i) {
+                                        case 0:
+                                            info="日期:" + infosString[i]+"\n";
+                                            break;
+                                        case 1:
+                                            info=info+"仓库代号:" + infosString[i]+"\n";
+                                            break;
+                                        case 2:
+                                            info=info+"材料代号:" + infosString[i]+"\n";
+                                            break;
+                                        case 3:
+                                            info=info+"批次号:" + infosString[i]+"\n";
+                                            break;
+                                        case 4:
+                                            info=info+"数量:" + infosString[i]+"\n";
+                                            break;
+                                        case 5:
+                                            info=info+"单位:" + infosString[i];
+                                            break;
+                                    }
+                                }
+                                infos.setText(info);
+                            }else {
+                                showToast("货物码格式错误!");
+                            }
+                        }else {
+                            if (!barcode.equals(decode)){
+                                ToastUtils.showToast("一次盘点一种产品，请扫描相同产品");
+                            }else {
+                                String infosString[]=decode.split(";");
+                                if (infosString.length==6) {
+                                    for (int i = 0; i < infosString.length; i++) {
+                                        switch (i) {
+                                            case 0:
+                                                info = "日期:" + infosString[i] + "\n";
+                                                break;
+                                            case 1:
+                                                info = info + "仓库代号:" + infosString[i] + "\n";
+                                                break;
+                                            case 2:
+                                                info = info + "材料代号:" + infosString[i] + "\n";
+                                                break;
+                                            case 3:
+                                                info = info + "批次号:" + infosString[i] + "\n";
+                                                break;
+                                            case 4:
+                                                info = info + "数量:" + infosString[i] + "\n";
+                                                break;
+                                            case 5:
+                                                info = info + "单位:" + infosString[i];
+                                                break;
+                                        }
+                                    }
+                                    infos.setText(info);
+                                    Count.setText(String.valueOf(count));
+                                    count++;
+                                }else {
+                                    showToast("货物码格式错误!");
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    @Override
+    protected int attachLayoutRes() {
+        return R.layout.activity_storageout;
+    }
+
+
+    @Override
+    public void initData() {
+        super.initData();
+
+    }
+
+    @Override
+    public void initView() {
+        super.initView();
+        ToastUtils.init(this);
+        current_username=  (String) SPUtils.get(Constants.current_username, "");
+        warehouse_id=  (String) SPUtils.get(Constants.warehouse_id, "");
+        tv_center_title.setVisibility(View.VISIBLE);
+        tv_center_title.setText("出库");
+        iv_back.setVisibility(View.VISIBLE);
+
+        registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+        loadingDialog=   new ProgressDialog(StorageOutActivity.this);
+        loadingDialog.setTitle("获取库房信息");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetWarehouseID";
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.sslSocketFactory();
+        final Request request = new Request.Builder()
+                .url(url)
+                .get()//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG, "onFailure: "+e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showToast("无法获取库房列表");
+                        CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this, true);
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                String warehouseIds=response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Document document = DocumentHelper.parseText(warehouseIds);
+                            Element element = document.getRootElement();
+                            String ids[] = element.getData().toString().split(";");
+                            for (int i = 0; i < ids.length; i++) {
+                                warehouseidMaps.put(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()), ids[i].substring(0, ids[i].indexOf("/")));
+                                dataset.add(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()));
+                            }
+                            niceSpinner.attachDataSource(dataset);
+                            loadingDialog.dismiss();
+                            Log.v(TAG, warehouseidMaps.toString());
+                        } catch (DocumentException e) {
+                            e.printStackTrace();
+                            showToast("获取库房信息失败!");
+                            loadingDialog.dismiss();
+                            CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this,true);
+                        }
+
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    public void setListener() {
+        iv_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this,true);
+            }
+        });
+
+        niceSpinner.setOnSpinnerItemSelectedListener(new OnSpinnerItemSelectedListener() {
+            @Override
+            public void onItemSelected(NiceSpinner parent, View view, int position, long id) {
+                // This example uses String, but your type can be any
+                wareto = parent.getItemAtPosition(position).toString();
+                Log.v(TAG,wareto);
+            }
+        });
+
+        reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isorderNo = true;
+                barcode = "";
+                Count.setText("0");
+                count=1;
+                OrderNumber.setText("扫描订单号");
+                Barcode.setText("扫描产品码");
+                infos.setText("产品信息");
+            }
+        });
+        post.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
+                String warename=niceSpinner.getText().toString();
+                loadingDialog=   new ProgressDialog(StorageOutActivity.this);
+                loadingDialog.setTitle("正在上传数据");
+                loadingDialog.setCancelable(false);
+                loadingDialog.show();
+                String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTransferOutData";
+                OkHttpClient okHttpClient = new OkHttpClient();
+                okHttpClient.sslSocketFactory();
+                RequestBody body = new FormBody.Builder()
+                        .add("OrderNumber",OrderNumber.getText().toString())
+                        .add("Barcode",barcode)
+                        .add("WarehouseCodeFrom",warehouse_id)
+                        .add("WarehouseCodeTo", warehouseidMaps.get(warename).toString())
+                        .add("Count",Count.getText().toString())
+                        .add("UserName",current_username)
+                        .add("ScanDate",sdf.format(new Date()))
+                        .build();
+                final Request request = new Request.Builder()
+                        .url(url)
+                        .post(body)//默认就是GET请求，可以不写
+                        .build();
+                Call call = okHttpClient.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.d(TAG, "onFailure: "+e.getMessage());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showToast(e.getMessage());
+                                showToast("上传失败，检查网络!");
+                            }
+                        });
+                    }
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String result = response.body().string();
+                        Log.d(TAG, "onResponse: " + result);
+                        Document document = null;
+                        try {
+                            document = DocumentHelper.parseText(result);
+                        } catch (DocumentException e) {
+                            e.printStackTrace();
+                        }
+                        Element element = document.getRootElement();
+                        if (element.getData().toString().equals("true")) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    isorderNo = true;
+                                    barcode = "";
+                                    Count.setText("0");
+                                    OrderNumber.setText("扫描订单号");
+                                    count=1;
+                                    Barcode.setText("扫描产品码");
+                                    infos.setText("产品信息");
+                                    showToast("上传成功!");
+                                    loadingDialog.dismiss();
+                                }
+                            });
+                        }else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    showToast("上传失败!");
+                                    loadingDialog.dismiss();
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+    }
+}

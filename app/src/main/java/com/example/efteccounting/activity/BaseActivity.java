@@ -49,10 +49,8 @@ public abstract class BaseActivity extends AppCompatActivity implements IBaseVie
         super.onCreate(savedInstanceState);
         setContentView(attachLayoutRes());
         ButterKnife.bind(this);
-
         initView();
         initData();
-
         setListener();
 
     }

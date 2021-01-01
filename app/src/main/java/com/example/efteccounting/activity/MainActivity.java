@@ -55,20 +55,20 @@ public class MainActivity extends BaseActivity {
         functionType.des="收货入库";
         functionType.img=R.mipmap.p2;
         FunctionType functionType1=new FunctionType();
-        functionType1.des="设置";
-        functionType1.img=R.mipmap.p4;
+        functionType1.des="发退";
+        functionType1.img=R.mipmap.down;
         FunctionType functionType2=new FunctionType();
-        functionType2.des="发货出库";
-        functionType2.img=R.mipmap.p3;
+        functionType2.des="收退";
+        functionType2.img=R.mipmap.up;
         FunctionType functionType3=new FunctionType();
-        functionType3.des="导出";
+        functionType3.des="发货出库";
         functionType3.img=R.mipmap.p3;
         FunctionType functionType4=new FunctionType();
-        functionType4.des="数据采集";
-        functionType4.img=R.mipmap.p5;
+        functionType4.des="盘点";
+        functionType4.img=R.mipmap.l2;
         FunctionType functionType5=new FunctionType();
-        functionType5.des="关于";
-        functionType5.img=R.mipmap.p6;
+        functionType5.des="查询";
+        functionType5.img=R.mipmap.l1;
         mList.add(functionType);
         mList.add(functionType2);
         mList.add(functionType3);
@@ -111,7 +111,7 @@ public class MainActivity extends BaseActivity {
                 switch (position) {
                     case 0:
                         //入库
-                       Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                       Intent intent = new Intent(MainActivity.this, StorageInActivity.class);
                         startActivity(intent);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
@@ -120,8 +120,15 @@ public class MainActivity extends BaseActivity {
                     case 1:
                         break;
                     case 2:
+                        //入库
+                        Intent intent2 = new Intent(MainActivity.this, StorageOutActivity.class);
+                        startActivity(intent2);
+                        CommonUtil.openNewActivityAnim(MainActivity.this, false);
                        break;
                     case 4:
+                        Intent intent4 = new Intent(MainActivity.this, CountActivity.class);
+                        startActivity(intent4);
+                        CommonUtil.openNewActivityAnim(MainActivity.this, false);
                        break;
                     case 5:
                        break;

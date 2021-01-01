@@ -9,6 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:name=".activity.MyApplication"
         android:networkSecurityConfig="@xml/network_config"
         >
     <activity android:name=".activity.LaunchActivity" android:screenOrientation="portrait">
@@ -27,6 +28,21 @@
             android:screenOrientation="portrait"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:name=".activity.MainActivity">
+        </activity>
+        <activity
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:name=".activity.StorageInActivity">
+        </activity>
+        <activity
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:name=".activity.StorageOutActivity">
+        </activity>
+        <activity
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:name=".activity.CountActivity">
         </activity>
     </application>
 </manifest>
