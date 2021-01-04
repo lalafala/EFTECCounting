@@ -55,10 +55,10 @@ public class MainActivity extends BaseActivity {
         functionType.des="收货入库";
         functionType.img=R.mipmap.p2;
         FunctionType functionType1=new FunctionType();
-        functionType1.des="发退";
+        functionType1.des="入库退货";
         functionType1.img=R.mipmap.down;
         FunctionType functionType2=new FunctionType();
-        functionType2.des="收退";
+        functionType2.des="出库退货";
         functionType2.img=R.mipmap.up;
         FunctionType functionType3=new FunctionType();
         functionType3.des="发货出库";
@@ -116,8 +116,16 @@ public class MainActivity extends BaseActivity {
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
                     case 3:
+
+                        Intent intent3= new Intent(MainActivity.this, StorageInBackActivity.class);
+                        startActivity(intent3);
+                        CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
                     case 1:
+
+                        Intent intent1= new Intent(MainActivity.this, StorageOutBackActivity.class);
+                        startActivity(intent1);
+                        CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
                     case 2:
                         //入库

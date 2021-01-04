@@ -332,25 +332,91 @@ public class CountActivity extends  BaseActivity{
         post.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                upload();
+                if (count == 1) {
+                    showToast("没有盘点数据!");
+                } else {
+                    final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+                    normalDialog.setCancelable(false);
+                    normalDialog.setTitle("上传确认");
+                    normalDialog.setMessage("确认上传么？");
+                    normalDialog.setPositiveButton("确定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    upload();
+
+                                }
+                            });
+                    normalDialog.setNegativeButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                    normalDialog.show();
+
+                }
             }
         });
 
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                barcode = "";
-                Count.setText("0");
-                Barcode.setText("扫描产品码");
-                infos.setText("产品信息");
-                count = 1;
+                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+                normalDialog.setCancelable(false);
+                normalDialog.setTitle("重扫");
+                normalDialog.setMessage("确认重扫么？");
+                normalDialog.setPositiveButton("确定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                barcode = "";
+                                Count.setText("0");
+                                Barcode.setText("扫描产品码");
+                                infos.setText("产品信息");
+                                count = 1;
+                            }
+                        });
+                normalDialog.setNegativeButton("取消",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+
+                normalDialog.show();
+
             }
         });
         tv_right_title.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (Count.getText().toString().equals("") || Count.getText().toString().equals("0")) {
-                    finishCount();
+                    final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+                    normalDialog.setCancelable(false);
+                    normalDialog.setTitle("结束盘点");
+                    normalDialog.setMessage("确认结束盘点么？");
+                    normalDialog.setPositiveButton("确定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finishCount();
+                                }
+                            });
+                    normalDialog.setNegativeButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                    normalDialog.show();
+
                 }else {
                     showToast("还有盘点数据未上传");
                 }
@@ -360,7 +426,28 @@ public class CountActivity extends  BaseActivity{
         iv_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                CommonUtil.exitActivityAndBackAnim(CountActivity.this,true);
+                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+                normalDialog.setCancelable(false);
+                normalDialog.setTitle("退出");
+                normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+                normalDialog.setPositiveButton("确定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                CommonUtil.exitActivityAndBackAnim(CountActivity.this,true);
+
+                            }
+                        });
+                normalDialog.setNegativeButton("取消",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+
+                normalDialog.show();
+
             }
         });
     }
@@ -375,5 +462,32 @@ public class CountActivity extends  BaseActivity{
     protected void onResume() {
         super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+        normalDialog.setCancelable(false);
+        normalDialog.setTitle("退出");
+        normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+        normalDialog.setPositiveButton("确定",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        CommonUtil.exitActivityAndBackAnim(CountActivity.this,true);
+
+                    }
+                });
+        normalDialog.setNegativeButton("取消",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        normalDialog.show();
+
     }
 }

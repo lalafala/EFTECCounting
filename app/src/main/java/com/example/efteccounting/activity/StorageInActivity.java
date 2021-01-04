@@ -46,6 +46,7 @@ public class StorageInActivity  extends  BaseActivity{
     private String warehouse_id;
     private int count=1;
     private boolean isorderNo =true;
+   private float checkCount=-1;
     @BindView(R.id.OrderNumber)
     TextView OrderNumber;
     @BindView(R.id.Barcode)
@@ -141,6 +142,7 @@ public class StorageInActivity  extends  BaseActivity{
             count++;
         }else {
             showToast("货物码格式错误!");
+            barcode="";
         }
     }
     @Override
@@ -165,101 +167,215 @@ public class StorageInActivity  extends  BaseActivity{
         iv_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                CommonUtil.exitActivityAndBackAnim(StorageInActivity.this,true);
+                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInActivity.this);
+                normalDialog.setCancelable(false);
+                normalDialog.setTitle("退出");
+                normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+                normalDialog.setPositiveButton("确定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                CommonUtil.exitActivityAndBackAnim(StorageInActivity.this,true);
+
+                            }
+                        });
+                normalDialog.setNegativeButton("取消",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+
+                normalDialog.show();
+
             }
         });
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                isorderNo = true;
-                barcode = "";
-                Count.setText("0");
-                OrderNumber.setText("扫描订单号");
-                Barcode.setText("扫描产品码");
-                infos.setText("产品信息");
-                count=1;
+                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInActivity.this);
+                normalDialog.setCancelable(false);
+                normalDialog.setTitle("重置");
+                normalDialog.setMessage("确认重置么，扫描到数据都会消失？");
+                normalDialog.setPositiveButton("确定",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                isorderNo = true;
+                                barcode = "";
+                                Count.setText("0");
+                                OrderNumber.setText("扫描订单号");
+                                Barcode.setText("扫描产品码");
+                                infos.setText("产品信息");
+                                count=1;
+                            }
+                        });
+                normalDialog.setNegativeButton("取消",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+
+                normalDialog.show();
+
             }
         });
 
         post.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loadingDialog=   new ProgressDialog(StorageInActivity.this);
-                loadingDialog.setTitle("正在上传数据");
-                loadingDialog.setCancelable(false);
-                loadingDialog.show();
-                SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-                String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitReceiptIntoData";
-                OkHttpClient okHttpClient = new OkHttpClient();
-                okHttpClient.sslSocketFactory();
-                RequestBody body = new FormBody.Builder()
-                        .add("OrderNumber",OrderNumber.getText().toString())
-                        .add("Barcode",barcode)
-                        .add("WarehouseCodeFrom",warefrom)
-                        .add("WarehouseCodeTo",warehouse_id)
-                        .add("Count",Count.getText().toString())
-                        .add("UserName",current_username)
-                        .add("ScanDate",sdf.format(new Date()))
-                        .build();
-                final Request request = new Request.Builder()
-                        .url(url)
-                        .post(body)//默认就是GET请求，可以不写
-                        .build();
-                Call call = okHttpClient.newCall(request);
-                call.enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        Log.d(TAG, "onFailure: "+e.getMessage());
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                               showToast(e.getMessage());
-                            }
-                        });
-                    }
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        String result=response.body().string();
-                        Log.d(TAG, "onResponse: "+result);
-                        Document document = null;
-                        try {
-                            document = DocumentHelper.parseText(result);
-                        } catch (DocumentException e) {
-                            e.printStackTrace();
-                        }
-                        Element element= document.getRootElement();
-                        if (element.getData().toString().equals("true")) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    isorderNo = true;
-                                    barcode = "";
-                                    Count.setText("0");
-                                    OrderNumber.setText("扫描订单号");
-                                    //    OrderNumber.setEnabled(true);
-                                    Barcode.setText("扫描产品码");
-                                    infos.setText("产品信息");
-                                    count=1;
-                                    showToast("上传成功!");
-                                    loadingDialog.dismiss();
-                                }
-                            });
-                        }else {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                if (count == 1) {
+                    showToast("没有盘点数据！");
+                } else {
 
-                                    showToast("上传失败!");
-                                    loadingDialog.dismiss();
+                    final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInActivity.this);
+                    normalDialog.setCancelable(false);
+                    normalDialog.setTitle("确认");
+                    normalDialog.setMessage("确认提交么？");
+                    normalDialog.setPositiveButton("确定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    upload();
                                 }
                             });
-                        }
-                    }
-                });
+                    normalDialog.setNegativeButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                    normalDialog.show();
+                }
             }
         });
     }
 
+
+    private void upload(){
+        loadingDialog=   new ProgressDialog(StorageInActivity.this);
+        loadingDialog.setTitle("正在上传数据");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
+        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitReceiptIntoData";
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.sslSocketFactory();
+        RequestBody body = new FormBody.Builder()
+                .add("OrderNumber",OrderNumber.getText().toString())
+                .add("Barcode",barcode)
+                .add("WarehouseCodeFrom",warefrom)
+                .add("WarehouseCodeTo",warehouse_id)
+                .add("Count",Count.getText().toString())
+                .add("UserName",current_username)
+                .add("ScanDate",sdf.format(new Date()))
+                .build();
+        final Request request = new Request.Builder()
+                .url(url)
+                .post(body)//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG, "onFailure: "+e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showToast(e.getMessage());
+                    }
+                });
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String result=response.body().string();
+                Log.d(TAG, "onResponse: "+result);
+                Document document = null;
+                try {
+                    document = DocumentHelper.parseText(result);
+                } catch (DocumentException e) {
+                    e.printStackTrace();
+                }
+                Element element= document.getRootElement();
+                if (element.getData().toString().equals("true")) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            isorderNo = true;
+                            barcode = "";
+                            Count.setText("0");
+                            OrderNumber.setText("扫描订单号");
+                            //    OrderNumber.setEnabled(true);
+                            Barcode.setText("扫描产品码");
+                            infos.setText("产品信息");
+                            count=1;
+                            showToast("上传成功!");
+                            loadingDialog.dismiss();
+                        }
+                    });
+                }else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showToast("上传失败!");
+                            loadingDialog.dismiss();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void getcount(String decode){
+
+        loadingDialog=   new ProgressDialog(StorageInActivity.this);
+        loadingDialog.setTitle("获取库房数据");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
+        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetReceiptIntoCheckCount";
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.sslSocketFactory();
+        RequestBody body = new FormBody.Builder()
+                .add("OrderNumber",barcode)
+                .add("Barcode",decode)
+                .build();
+        final Request request = new Request.Builder()
+                .url(url)
+                .post(body)//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG, "onFailure: "+e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showToast(e.getMessage());
+                    }
+                });
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String result=response.body().string();
+                Log.d(TAG, "onResponse: "+result);
+                Document document = null;
+                try {
+                    document = DocumentHelper.parseText(result);
+                } catch (DocumentException e) {
+                    e.printStackTrace();
+                }
+                Element element= document.getRootElement();
+                checkCount=Float.valueOf(element.getData().toString());
+            }
+        });
+    }
     @Override
     protected void onPause() {
         super.onPause();
@@ -270,5 +386,32 @@ public class StorageInActivity  extends  BaseActivity{
     protected void onResume() {
         super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInActivity.this);
+        normalDialog.setCancelable(false);
+        normalDialog.setTitle("退出");
+        normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+        normalDialog.setPositiveButton("确定",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        CommonUtil.exitActivityAndBackAnim(StorageInActivity.this,true);
+
+                    }
+                });
+        normalDialog.setNegativeButton("取消",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        normalDialog.show();
+
     }
 }

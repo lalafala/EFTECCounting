@@ -45,9 +45,9 @@ import utils.CommonUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
-public class StorageOutActivity extends  BaseActivity{
+public class StorageOutBackActivity extends  BaseActivity{
     private final static String ACTION_HONEYWLL = "com.honeywell";
-    private static final String TAG = "StorageOutActivity";
+    private static final String TAG = "StorageOutBackActivity";
     private String current_username;
     private String warehouse_id;
     private int count=1;
@@ -83,7 +83,7 @@ public class StorageOutActivity extends  BaseActivity{
                         return;
                     }
                     if (isorderNo){
-                        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+                        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutBackActivity.this);
                         normalDialog.setCancelable(false);
                         normalDialog.setTitle("信息确认");
                         normalDialog.setMessage("订单号:"+decode+"\n对应的仓库为:"+niceSpinner.getText().toString());
@@ -175,11 +175,11 @@ public class StorageOutActivity extends  BaseActivity{
         current_username=  (String) SPUtils.get(Constants.current_username, "");
         warehouse_id=  (String) SPUtils.get(Constants.warehouse_id, "");
         tv_center_title.setVisibility(View.VISIBLE);
-        tv_center_title.setText("出库");
+        tv_center_title.setText("出库退货");
         iv_back.setVisibility(View.VISIBLE);
 
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
-        loadingDialog=   new ProgressDialog(StorageOutActivity.this);
+        loadingDialog=   new ProgressDialog(StorageOutBackActivity.this);
         loadingDialog.setTitle("获取库房信息");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
@@ -199,7 +199,7 @@ public class StorageOutActivity extends  BaseActivity{
                     @Override
                     public void run() {
                         showToast("无法获取库房列表");
-                        CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this, true);
+                        CommonUtil.exitActivityAndBackAnim(StorageOutBackActivity.this, true);
                     }
                 });
             }
@@ -226,7 +226,7 @@ public class StorageOutActivity extends  BaseActivity{
                             e.printStackTrace();
                             showToast("获取库房信息失败!");
                             loadingDialog.dismiss();
-                            CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this,true);
+                            CommonUtil.exitActivityAndBackAnim(StorageOutBackActivity.this,true);
                         }
 
                     }
@@ -240,7 +240,7 @@ public class StorageOutActivity extends  BaseActivity{
         iv_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+                final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutBackActivity.this);
                 normalDialog.setCancelable(false);
                 normalDialog.setTitle("退出");
                 normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
@@ -248,7 +248,7 @@ public class StorageOutActivity extends  BaseActivity{
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this,true);
+                                CommonUtil.exitActivityAndBackAnim(StorageOutBackActivity.this,true);
 
                             }
                         });
@@ -279,7 +279,7 @@ public class StorageOutActivity extends  BaseActivity{
             @Override
             public void onClick(View view) {
 
-                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+                final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutBackActivity.this);
                 normalDialog.setCancelable(false);
                 normalDialog.setTitle("重置确认");
                 normalDialog.setMessage("确认重扫么，扫描到数据都会消失？");
@@ -318,7 +318,7 @@ public class StorageOutActivity extends  BaseActivity{
                     showToast("没有盘点数据！");
                 }else {
 
-                    final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+                    final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutBackActivity.this);
                     normalDialog.setCancelable(false);
                     normalDialog.setTitle("确认");
                     normalDialog.setMessage("确认提交么？");
@@ -348,11 +348,11 @@ public class StorageOutActivity extends  BaseActivity{
     private void upload(){
             SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
             String warename=niceSpinner.getText().toString();
-            loadingDialog=   new ProgressDialog(StorageOutActivity.this);
+            loadingDialog=   new ProgressDialog(StorageOutBackActivity.this);
             loadingDialog.setTitle("正在上传数据");
             loadingDialog.setCancelable(false);
             loadingDialog.show();
-            String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTransferOutData";
+            String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTransferBackOutData";
             OkHttpClient okHttpClient = new OkHttpClient();
             okHttpClient.sslSocketFactory();
             RequestBody body = new FormBody.Builder()
@@ -437,7 +437,7 @@ public class StorageOutActivity extends  BaseActivity{
     @Override
     public void onBackPressed() {
 
-        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutBackActivity.this);
         normalDialog.setCancelable(false);
         normalDialog.setTitle("退出");
         normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
@@ -445,7 +445,7 @@ public class StorageOutActivity extends  BaseActivity{
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        CommonUtil.exitActivityAndBackAnim(StorageOutActivity.this,true);
+                        CommonUtil.exitActivityAndBackAnim(StorageOutBackActivity.this,true);
 
                     }
                 });

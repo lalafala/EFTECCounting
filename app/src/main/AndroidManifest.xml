@@ -44,5 +44,15 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:name=".activity.CountActivity">
         </activity>
+        <activity
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:name=".activity.StorageOutBackActivity">
+        </activity>
+        <activity
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:name=".activity.StorageInBackActivity">
+        </activity>
     </application>
 </manifest>
