@@ -52,6 +52,8 @@ public class StorageOutActivity extends  BaseActivity{
     private String warehouse_id;
     private int count=1;
     private boolean isorderNo =true;
+    private float checkCount=0;
+    private boolean checked=false;
     private Map<String,String> warehouseidMaps=new HashMap<>();
     List<String> dataset = new LinkedList<>();
     @BindView(R.id.OrderNumber)
@@ -107,9 +109,12 @@ public class StorageOutActivity extends  BaseActivity{
                         normalDialog.show();
                     }else {
                         if (!barcode.equals(decode) && !barcode.equals("")){
-                            ToastUtils.showToast("一次盘点一种产品，请扫描相同产品");
+                            ToastUtils.showToast2("请先提交当前产品结果，再扫描其他产品");
                         }else {
                             showScandata(decode);
+                            if (!checked) {
+                                getcount(decode);
+                            }
                         }
                     } }
             }
@@ -234,7 +239,58 @@ public class StorageOutActivity extends  BaseActivity{
             }
         });
     }
+    private void getcount(String decode){
 
+        loadingDialog=   new ProgressDialog(StorageOutActivity.this);
+        loadingDialog.setTitle("获取库房数据");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+      //  SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
+        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetTransferOutCheckCount";
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.sslSocketFactory();
+        RequestBody body = new FormBody.Builder()
+                .add("WarehouseCode",warehouse_id)
+                .add("Barcode",decode)
+                .build();
+        final Request request = new Request.Builder()
+                .url(url)
+                .post(body)//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG, "onFailure: "+e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showToast(e.getMessage());
+                        loadingDialog.dismiss();
+                    }
+                });
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String result=response.body().string();
+                Log.d(TAG, "onResponse1: "+result);
+                Document document = null;
+                try {
+                    document = DocumentHelper.parseText(result);
+                    Element element= document.getRootElement();
+                    checkCount=Float.valueOf(element.getData().toString());
+                    Log.v(TAG,String.valueOf(checkCount));
+                    checked=true;
+                    loadingDialog.dismiss();
+                } catch (DocumentException e) {
+                    loadingDialog.dismiss();
+                    showToast2("数据错误!");
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
     @Override
     public void setListener() {
         iv_back.setOnClickListener(new View.OnClickListener() {
@@ -326,7 +382,31 @@ public class StorageOutActivity extends  BaseActivity{
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    upload();
+                                    if (Float.valueOf(Count.getText().toString())<=checkCount) {
+                                        upload();
+                                    }else{
+                                        final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageOutActivity.this);
+                                        normalDialog.setCancelable(false);
+                                        normalDialog.setTitle("确认");
+                                        normalDialog.setMessage("盘点数目大于库存，确认提交么？");
+                                        normalDialog.setPositiveButton("确定",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        upload();
+                                                    }
+                                                });
+                                        normalDialog.setNegativeButton("取消",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+
+                                                    }
+                                                });
+
+                                        normalDialog.show();
+                                    }
+
                                 }
                             });
                     normalDialog.setNegativeButton("取消",
@@ -355,6 +435,7 @@ public class StorageOutActivity extends  BaseActivity{
             String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTransferOutData";
             OkHttpClient okHttpClient = new OkHttpClient();
             okHttpClient.sslSocketFactory();
+            Log.v(TAG,warehouse_id+":"+ warehouseidMaps.get(warename).toString());
             RequestBody body = new FormBody.Builder()
                     .add("OrderNumber",OrderNumber.getText().toString())
                     .add("Barcode",barcode)
@@ -404,7 +485,10 @@ public class StorageOutActivity extends  BaseActivity{
                                 Barcode.setText("扫描产品码");
                                 infos.setText("产品信息");
                                 showToast("上传成功!");
+                                checked=false;
+                                checkCount=0;
                                 loadingDialog.dismiss();
+
                             }
                         });
                     } else {

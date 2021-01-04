@@ -71,7 +71,7 @@ public class CountActivity extends  BaseActivity{
                     Log.v(TAG, decode);
 
                             if (!barcode.equals(decode) && !barcode.equals("")){
-                                ToastUtils.showToast("一次盘点一种产品，请扫描相同产品");
+                                ToastUtils.showToast2("请先提交当前产品结果，再扫描其他产品");
                             }else {
                                 showScandata(decode);
                             }

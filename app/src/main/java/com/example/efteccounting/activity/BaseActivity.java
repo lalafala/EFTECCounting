@@ -35,9 +35,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IBaseVie
     @Nullable
     @BindView(R.id.tv_center_title)
     public TextView tv_center_title;
-//    @Nullable
-//    @BindView(R.id.iv_back2)
-//    public ImageView iv_back2;
+
     @Nullable
     @BindView(R.id.iv_right_title)
     public ImageView iv_right_title;

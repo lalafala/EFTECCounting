@@ -51,6 +51,8 @@ public class StorageInBackActivity extends  BaseActivity{
     private String current_username;
     private String warehouse_id;
     private int count=1;
+    private float checkCount=-1;
+    private boolean checked=false;
     private boolean isorderNo =true;
     private Map<String,String> warehouseidMaps=new HashMap<>();
     List<String> dataset = new LinkedList<>();
@@ -107,16 +109,67 @@ public class StorageInBackActivity extends  BaseActivity{
                         normalDialog.show();
                     }else {
                         if (!barcode.equals(decode) && !barcode.equals("")){
-                            ToastUtils.showToast("一次盘点一种产品，请扫描相同产品");
+                            ToastUtils.showToast2("请先提交当前产品结果，再扫描其他产品");
                         }else {
-                            showScandata(decode);
+
+                                showScandata(decode);
+                                if (!checked) {
+                                    getcount(decode);
+                                }
                         }
                     } }
             }
         }
     };
 
+    private void getcount(String decode){
 
+        loadingDialog=   new ProgressDialog(StorageInBackActivity.this);
+        loadingDialog.setTitle("获取库房数据");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetReceiptIntoCheckCount";
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.sslSocketFactory();
+        RequestBody body = new FormBody.Builder()
+                .add("OrderNumber",OrderNumber.getText().toString())
+                .add("Barcode",decode)
+                .build();
+        final Request request = new Request.Builder()
+                .url(url)
+                .post(body)//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG, "onFailure: "+e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showToast(e.getMessage());
+                        loadingDialog.dismiss();
+                    }
+                });
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String result=response.body().string();
+                Log.d(TAG, "onResponse: "+result);
+                Document document = null;
+                try {
+                    document = DocumentHelper.parseText(result);
+                } catch (DocumentException e) {
+                    e.printStackTrace();
+                }
+                Element element= document.getRootElement();
+                checkCount=Float.valueOf(element.getData().toString());
+                Log.v(TAG,String.valueOf(checkCount));
+                checked=true;
+                loadingDialog.dismiss();
+            }
+        });
+    }
     private void showScandata(String decode){
         if (barcode.equals("")) {
             barcode=decode;
@@ -215,11 +268,20 @@ public class StorageInBackActivity extends  BaseActivity{
                             Document document = DocumentHelper.parseText(warehouseIds);
                             Element element = document.getRootElement();
                             String ids[] = element.getData().toString().split(";");
+                            int j=0;
+                            boolean notempty=false;
                             for (int i = 0; i < ids.length; i++) {
+                                notempty=true;
                                 warehouseidMaps.put(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()), ids[i].substring(0, ids[i].indexOf("/")));
                                 dataset.add(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()));
+                                if((ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()).equals("再生品仓库"))){
+                                    j=i;
+                                }
                             }
                             niceSpinner.attachDataSource(dataset);
+                            if (notempty) {
+                                niceSpinner.setSelectedIndex(j);
+                            }
                             loadingDialog.dismiss();
                             Log.v(TAG, warehouseidMaps.toString());
                         } catch (DocumentException e) {
@@ -287,6 +349,7 @@ public class StorageInBackActivity extends  BaseActivity{
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+
                                 isorderNo = true;
                                 barcode = "";
                                 Count.setText("0");
@@ -326,7 +389,53 @@ public class StorageInBackActivity extends  BaseActivity{
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    upload();
+                                    if (Float.valueOf(Count.getText().toString())<=checkCount) {
+                                        upload();
+                                    }else{
+                                        final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
+                                        normalDialog.setCancelable(false);
+                                        normalDialog.setTitle("确认");
+                                        normalDialog.setMessage("退货数目大于库存，确认提交么？");
+                                        normalDialog.setPositiveButton("确定",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        if (Float.valueOf(Count.getText().toString())<=checkCount) {
+                                                            upload();
+                                                        }else{
+                                                            final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
+                                                            normalDialog.setCancelable(false);
+                                                            normalDialog.setTitle("确认");
+                                                            normalDialog.setMessage("盘点数目大于库存，确认提交么？");
+                                                            normalDialog.setPositiveButton("确定",
+                                                                    new DialogInterface.OnClickListener() {
+                                                                        @Override
+                                                                        public void onClick(DialogInterface dialog, int which) {
+                                                                            upload();
+                                                                        }
+                                                                    });
+                                                            normalDialog.setNegativeButton("取消",
+                                                                    new DialogInterface.OnClickListener() {
+                                                                        @Override
+                                                                        public void onClick(DialogInterface dialog, int which) {
+
+                                                                        }
+                                                                    });
+
+                                                            normalDialog.show();
+                                                        }
+                                                    }
+                                                });
+                                        normalDialog.setNegativeButton("取消",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+
+                                                    }
+                                                });
+
+                                        normalDialog.show();
+                                    }
                                 }
                             });
                     normalDialog.setNegativeButton("取消",
@@ -404,6 +513,8 @@ public class StorageInBackActivity extends  BaseActivity{
                                 Barcode.setText("扫描产品码");
                                 infos.setText("产品信息");
                                 showToast("上传成功!");
+                                checked=false;
+                                checkCount=0;
                                 loadingDialog.dismiss();
                             }
                         });

@@ -47,6 +47,7 @@ public class StorageInActivity  extends  BaseActivity{
     private int count=1;
     private boolean isorderNo =true;
    private float checkCount=-1;
+   private boolean checked=false;
     @BindView(R.id.OrderNumber)
     TextView OrderNumber;
     @BindView(R.id.Barcode)
@@ -96,9 +97,12 @@ public class StorageInActivity  extends  BaseActivity{
                         normalDialog.show();
                     }else{
                             if (!barcode.equals(decode) && !barcode.equals("")){
-                                ToastUtils.showToast("一次盘点一种产品，请扫描相同产品");
+                                ToastUtils.showToast2("请先提交当前产品结果，再扫描其他产品");
                             }else {
                                 showScandata(decode);
+                                if (!checked) {
+                                    getcount(decode);
+                                }
                             }
 
                     }
@@ -239,7 +243,30 @@ public class StorageInActivity  extends  BaseActivity{
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    upload();
+                                    if (Float.valueOf(Count.getText().toString())<=checkCount) {
+                                        upload();
+                                    }else{
+                                        final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInActivity.this);
+                                        normalDialog.setCancelable(false);
+                                        normalDialog.setTitle("确认");
+                                        normalDialog.setMessage("盘点数目大于库存，确认提交么？");
+                                        normalDialog.setPositiveButton("确定",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                            upload();
+                                                    }
+                                                });
+                                        normalDialog.setNegativeButton("取消",
+                                                new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+
+                                                    }
+                                                });
+
+                                        normalDialog.show();
+                                    }
                                 }
                             });
                     normalDialog.setNegativeButton("取消",
@@ -316,6 +343,8 @@ public class StorageInActivity  extends  BaseActivity{
                             count=1;
                             showToast("上传成功!");
                             loadingDialog.dismiss();
+                            checked=false;
+                            checkCount=0;
                         }
                     });
                 }else {
@@ -342,7 +371,7 @@ public class StorageInActivity  extends  BaseActivity{
         OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.sslSocketFactory();
         RequestBody body = new FormBody.Builder()
-                .add("OrderNumber",barcode)
+                .add("OrderNumber",OrderNumber.getText().toString())
                 .add("Barcode",decode)
                 .build();
         final Request request = new Request.Builder()
@@ -358,6 +387,7 @@ public class StorageInActivity  extends  BaseActivity{
                     @Override
                     public void run() {
                         showToast(e.getMessage());
+                        loadingDialog.dismiss();
                     }
                 });
             }
@@ -373,6 +403,9 @@ public class StorageInActivity  extends  BaseActivity{
                 }
                 Element element= document.getRootElement();
                 checkCount=Float.valueOf(element.getData().toString());
+                Log.v(TAG,String.valueOf(checkCount));
+                checked=true;
+                loadingDialog.dismiss();
             }
         });
     }

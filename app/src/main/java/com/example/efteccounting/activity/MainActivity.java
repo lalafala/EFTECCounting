@@ -139,6 +139,9 @@ public class MainActivity extends BaseActivity {
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                        break;
                     case 5:
+                        Intent intent5 = new Intent(MainActivity.this, SearchActivity.class);
+                        startActivity(intent5);
+                        CommonUtil.openNewActivityAnim(MainActivity.this, false);
                        break;
                 }
             }
