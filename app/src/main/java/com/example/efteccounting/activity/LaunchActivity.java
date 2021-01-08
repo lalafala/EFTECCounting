@@ -9,6 +9,7 @@ import com.example.efteccounting.R;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import okhttp3.Call;
@@ -34,8 +35,10 @@ public class LaunchActivity extends BaseActivity{
     public void initData() {
         super.initData();
 
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/DBTest";
-        OkHttpClient okHttpClient = new OkHttpClient();
+      /*  String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/DBTest";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         final Request request = new Request.Builder()
                 .url(url)
@@ -53,7 +56,7 @@ public class LaunchActivity extends BaseActivity{
                 Log.d(TAG, "onResponse: " + response.body().string());
                 
             }
-        });
+        });*/
       /*  File file =new File(Environment.getExternalStorageDirectory() +"/import");
         if (!file.exists())
         {

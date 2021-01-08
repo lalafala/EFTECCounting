@@ -25,13 +25,13 @@ public class ToastUtils {
 
     public static void showToast(String s) {
         if (toast == null) {
-            toast = Toast.makeText(sContext, s, Toast.LENGTH_SHORT);
+            toast = Toast.makeText(sContext, s, Toast.LENGTH_LONG);
             toast.show();
             oneTime = System.currentTimeMillis();
         } else {
             twoTime = System.currentTimeMillis();
             if (s.equals(oldMsg)) {
-                if (twoTime - oneTime > Toast.LENGTH_SHORT) {
+                if (twoTime - oneTime > Toast.LENGTH_LONG) {
                     toast.show();
                 }
             } else {

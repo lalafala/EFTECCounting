@@ -3,7 +3,7 @@
     <dimen name="margin">10dp</dimen>
     <dimen name="margin_5">5dp</dimen>
 
-    <dimen name="d_title">15dp</dimen>
+    <dimen name="d_title">25dp</dimen>
     <!-- 字体大小 -->
     <dimen name="text_size_deleteicon">30.0dp</dimen>
     <dimen name="text_size_biggest">24.0dp</dimen>

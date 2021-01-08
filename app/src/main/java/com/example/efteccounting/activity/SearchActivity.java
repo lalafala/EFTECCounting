@@ -24,6 +24,7 @@ import org.dom4j.Element;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import bean.Constants;
 import butterknife.BindView;
@@ -43,8 +44,8 @@ public class SearchActivity extends  BaseActivity{
     private static final String TAG = "CountActivity";
     private String current_username;
     private String warehouse_id;
-    private int count=1;
 
+    private String url_con=SPUtils.get("url_con","").toString();
     @BindView(R.id.Barcode)
     EditText Barcode;
     @BindView(R.id.Count)
@@ -69,17 +70,14 @@ public class SearchActivity extends  BaseActivity{
 
 
                                 showScandata(decode);
-                                getCount();
+                                getCount(decode);
 
                 }
             }
         }
     };
     private void showScandata(String decode){
-        if (barcode.equals("")) {
-            barcode=decode;
-            Barcode.setText(decode);
-        }
+
         String infosString[]=decode.split(";");
         if (infosString.length==6) {
             for (int i = 0; i < infosString.length; i++) {
@@ -107,7 +105,6 @@ public class SearchActivity extends  BaseActivity{
             infos.setText(info);
         }else {
             showToast("货物码格式错误!");
-            barcode="";
         }
     }
     @Override
@@ -127,17 +124,19 @@ public class SearchActivity extends  BaseActivity{
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
     }
 
-    private void getCount(){
+    private void getCount(String decode){
         loadingDialog=   new ProgressDialog(SearchActivity.this);
         loadingDialog.setTitle("查询中");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/QueryGoodsStatus";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        String url = url_con+"QueryGoodsStatus";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         RequestBody body = new FormBody.Builder()
                 .add("WarehouseCode",warehouse_id)
-                .add("Barcode",barcode)
+                .add("Barcode",decode)
                 .build();
         final Request request = new Request.Builder()
                 .url(url)

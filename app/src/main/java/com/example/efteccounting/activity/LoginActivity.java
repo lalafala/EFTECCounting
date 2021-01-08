@@ -1,8 +1,13 @@
 package com.example.efteccounting.activity;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -29,11 +34,14 @@ import org.xml.sax.InputSource;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import bean.Constants;
 import butterknife.BindView;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -54,22 +62,81 @@ public class LoginActivity extends BaseActivity {
     private NiceSpinner niceSpinner ;
     @BindView(R.id.bt_login)
     public Button bt_login;
-
+    @BindView(R.id.bt_set)
+    public Button bt_set;
     @BindView(R.id.bt_reload)
     public Button bt_reload;
     @BindView(R.id.info)
     TextView info;
+    private boolean isopen=false;
     private EditText username;
     private EditText password;
+    private String url_con;
     Dialog loadingDialog;
     private boolean canLogin=false;
+    EditText input;
+    private final static String ACTION_HONEYWLL = "com.honeywell";
+
     @Override
     protected int attachLayoutRes() {
         return R.layout.activity_login;
     }
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(ACTION_HONEYWLL)) {
+                if (intent.hasExtra("data")) {
+                    final String decode = intent.getStringExtra("data");
+                    Log.v(TAG, decode);
+                    if (isopen) {
+                        if (decode.startsWith("http://")) {
+                            url_con = decode;
+                            input.setText(url_con);
+                        }else {
+                            showToast("服务器地址必须以http://开头");
+                        }
+                    }
 
+                }
+            }
+        }
+    };
     @Override
     public void setListener() {
+        bt_set.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isopen=true;
+                final AlertDialog.Builder alert = new AlertDialog.Builder(LoginActivity.this);
+                alert.setCancelable(false);
+              //  url_con=SPUtils.get("url_con","").toString();
+                input=new EditText(LoginActivity.this);
+                input.setText(url_con);
+               alert.setView(input);
+                alert.setPositiveButton("设置", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        String value = input.getText().toString().trim();
+                        if (value.startsWith("http://")) {
+                            SPUtils.put("url_con", value);
+                            url_con = SPUtils.get("url_con", "").toString();
+                            test();
+                        }else {
+                            showToast("服务器地址必须以http://开头");
+                        }
+                        isopen=false;
+                    }
+                });
+
+                alert.setNegativeButton("取消",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                dialog.dismiss();
+                                isopen=false;
+                            }
+                        });
+                alert.show();
+
+            }
+        });
         bt_reload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -100,8 +167,10 @@ public class LoginActivity extends BaseActivity {
                         loadingDialog.setTitle("登录...");
                         loadingDialog.setCancelable(false);
                         loadingDialog.show();
-                        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/UserLogin";
-                        OkHttpClient okHttpClient = new OkHttpClient();
+                        String url = url_con+"UserLogin";
+                        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                                .connectTimeout(5, TimeUnit.SECONDS)
+                                .readTimeout(5,TimeUnit.SECONDS).build();
                         okHttpClient.sslSocketFactory();
                         RequestBody body = new FormBody.Builder()
                                 .add("User", login_user)
@@ -168,8 +237,7 @@ public class LoginActivity extends BaseActivity {
     @Override
     public void initData() {
         super.initData();
-
-
+        ToastUtils.init(this.getApplicationContext());
     }
 
 
@@ -196,13 +264,18 @@ public class LoginActivity extends BaseActivity {
         loadingDialog.setTitle("获取库房信息");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetWarehouseID";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        Log.e(TAG,url_con);
+        String url = url_con+"GetWarehouseID";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
-        final Request request = new Request.Builder()
-                .url(url)
-                .get()//默认就是GET请求，可以不写
-                .build();
+        try {
+            final Request request = new Request.Builder()
+                    .url(url)
+                    .get()//默认就是GET请求，可以不写
+                    .build();
+
         Call call = okHttpClient.newCall(request);
         call.enqueue(new Callback() {
             @Override
@@ -228,20 +301,83 @@ public class LoginActivity extends BaseActivity {
                             Document document = DocumentHelper.parseText(warehouseIds);
                             Element element = document.getRootElement();
                             String ids[] = element.getData().toString().split(";");
-                            for (int i = 0; i < ids.length; i++) {
-                                warehouseidMaps.put(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()), ids[i].substring(0, ids[i].indexOf("/")));
-                                dataset.add(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()));
+                            if (ids.length>1) {
+                                for (int i = 0; i < ids.length; i++) {
+                                    warehouseidMaps.put(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()), ids[i].substring(0, ids[i].indexOf("/")));
+                                    dataset.add(ids[i].substring(ids[i].indexOf("/") + 1, ids[i].length()));
+                                }
+                                niceSpinner.attachDataSource(dataset);
+                                Log.v(TAG, warehouseidMaps.toString());
+                                canLogin = true;
+                                loadingDialog.dismiss();
+                            }else {
+                                loadingDialog.dismiss();
+                                showToast("网址错误，请设置正确的服务器地址!");
                             }
-                            niceSpinner.attachDataSource(dataset);
-                            Log.v(TAG, warehouseidMaps.toString());
-                            canLogin = true;
-                            loadingDialog.dismiss();
                         } catch (DocumentException e) {
+                            loadingDialog.dismiss();
+                            showToast("数据验证失败，请设置正确的服务器地址!");
                             e.printStackTrace();
                         }
                     }
                 });
 
+            }
+        });}catch (Exception e){
+            loadingDialog.dismiss();
+            showToast("地址格式错误，请检查!");
+        }
+    }
+
+    private void test(){
+        loadingDialog=   new ProgressDialog(LoginActivity.this);
+        loadingDialog.setTitle("测试服务器地址");
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+        String url = url_con+"DBTest";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
+        okHttpClient.sslSocketFactory();
+        final Request request = new Request.Builder()
+                .url(url)
+                .get()//默认就是GET请求，可以不写
+                .build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //Log.d(TAG, "onFailure: "+e.getMessage());
+                loadingDialog.dismiss();
+                showToast("网址错误，请设置正确的服务器地址!");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                String result = response.body().string();
+                Log.d(TAG, "onResponse: " + result);
+                if (!result.startsWith("<!DOCTYPE html>")) {
+                    try {
+                        Document document = DocumentHelper.parseText(result);
+                        Element element = document.getRootElement();
+
+                        if (element.getData().toString().equals("admin/EFT001/EFT002/EFT003/EFT004/")) {
+                            loadingDialog.dismiss();
+                            showToast("网址设置成功,点击重新获取按钮!");
+                        } else {
+                            loadingDialog.dismiss();
+                            showToast("网址错误，请设置正确的服务器地址!");
+                        }
+                    } catch (Exception e) {
+                        loadingDialog.dismiss();
+                        showToast("网址错误，请设置正确的服务器地址!");
+                    }
+                }else {
+                    loadingDialog.dismiss();
+                          //  bt_login.setEnabled(false);
+                            showToast("网址错误，请设置正确的服务器地址!");
+                }
             }
         });
     }
@@ -249,11 +385,16 @@ public class LoginActivity extends BaseActivity {
     public void initView() {
         super.initView();
         ToastUtils.init(this);
+        input=new EditText(LoginActivity.this);
         niceSpinner= (NiceSpinner)findViewById(R.id.nice_spiner);
         username=(EditText)findViewById(R.id.username);
         username.setText("EFT003");
         password=(EditText)findViewById(R.id.password);
         password.setText("12345");
+        url_con=SPUtils.get("url_con", Constants.url_con).toString();
+        if (url_con.equals("")){
+            url_con=Constants.url_con;
+        }
         loadData();
     }
 
@@ -261,8 +402,11 @@ public class LoginActivity extends BaseActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
        /* PermissionUtils.isGrantExternalRW(this,1);*/
+        registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
 
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -283,5 +427,17 @@ public class LoginActivity extends BaseActivity {
                 break;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
     }
 }

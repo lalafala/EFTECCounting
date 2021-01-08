@@ -27,16 +27,16 @@
                 android:textSize="20sp"
 
                 />
-            <org.angmarch.views.NiceSpinner
+            <EditText
+                android:id="@+id/BackWarhouse"
                 android:layout_width="match_parent"
                 android:layout_height="48sp"
-                android:id="@+id/nice_spiner"
-                android:hint="选择库房"
-                android:textSize="15sp"
-                android:background="@color/gray_border"
-                android:textAlignment="center"
-                app:popupTextAlignment="start"
-                />
+                android:hint="扫描订单号"
+                android:background="@drawable/bg_edittext"
+                android:paddingLeft="8dp"
+                android:enabled="false"
+                android:singleLine="true"
+                android:textSize="15sp" />
         </LinearLayout>
             <LinearLayout android:layout_height="wrap_content"
                 android:layout_width="match_parent"

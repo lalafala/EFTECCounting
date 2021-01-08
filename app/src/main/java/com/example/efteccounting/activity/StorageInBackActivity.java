@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import bean.Constants;
 import butterknife.BindView;
@@ -47,13 +48,14 @@ import utils.ToastUtils;
 
 public class StorageInBackActivity extends  BaseActivity{
     private final static String ACTION_HONEYWLL = "com.honeywell";
-    private static final String TAG = "StorageOutBackActivity";
+    private static final String TAG = "StorageInBackActivity";
     private String current_username;
     private String warehouse_id;
     private int count=1;
     private float checkCount=-1;
     private boolean checked=false;
     private boolean isorderNo =true;
+    private boolean isscanned=false;
     private Map<String,String> warehouseidMaps=new HashMap<>();
     List<String> dataset = new LinkedList<>();
     @BindView(R.id.OrderNumber)
@@ -70,6 +72,7 @@ public class StorageInBackActivity extends  BaseActivity{
     Button reset;
     @BindView(R.id.nice_spiner)
     NiceSpinner niceSpinner;
+    private String url_con=SPUtils.get("url_con","").toString();
     private String barcode="";
     private String info="";
     private String wareto;
@@ -85,37 +88,42 @@ public class StorageInBackActivity extends  BaseActivity{
                         return;
                     }
                     if (isorderNo){
-                        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
-                        normalDialog.setCancelable(false);
-                        normalDialog.setTitle("信息确认");
-                        normalDialog.setMessage("订单号:"+decode+"\n对应的仓库为:"+niceSpinner.getText().toString());
-                        normalDialog.setPositiveButton("确定",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        OrderNumber.setText(decode);
-                                        OrderNumber.setEnabled(false);
-                                        isorderNo=false;
-                                    }
-                                });
-                        normalDialog.setNegativeButton("取消",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
+                        if (decode.contains(";")){
+                                showToast2("订单格式错误!");
+                        }else  {
+                            final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
+                            normalDialog.setCancelable(false);
+                            normalDialog.setTitle("信息确认");
+                            normalDialog.setMessage("订单号:" + decode + "\n对应的仓库为:" + niceSpinner.getText().toString());
+                            normalDialog.setPositiveButton("确定",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            OrderNumber.setText(decode);
+                                            OrderNumber.setEnabled(false);
+                                            isorderNo = false;
+                                            isscanned=true;
+                                        }
+                                    });
+                            normalDialog.setNegativeButton("取消",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
 
-                                    }
-                                });
+                                        }
+                                    });
 
-                        normalDialog.show();
+                            normalDialog.show();
+                        }
                     }else {
                         if (!barcode.equals(decode) && !barcode.equals("")){
                             ToastUtils.showToast2("请先提交当前产品结果，再扫描其他产品");
                         }else {
 
                                 showScandata(decode);
-                                if (!checked) {
+                                /*if (!checked) {
                                     getcount(decode);
-                                }
+                                }*/
                         }
                     } }
             }
@@ -128,8 +136,10 @@ public class StorageInBackActivity extends  BaseActivity{
         loadingDialog.setTitle("获取库房数据");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetReceiptIntoCheckCount";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        String url = url_con+"GetReceiptIntoCheckCount";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         RequestBody body = new FormBody.Builder()
                 .add("OrderNumber",OrderNumber.getText().toString())
@@ -147,7 +157,7 @@ public class StorageInBackActivity extends  BaseActivity{
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        showToast(e.getMessage());
+                        showToast("超时失败!");
                         loadingDialog.dismiss();
                     }
                 });
@@ -161,6 +171,8 @@ public class StorageInBackActivity extends  BaseActivity{
                     document = DocumentHelper.parseText(result);
                 } catch (DocumentException e) {
                     e.printStackTrace();
+                    loadingDialog.dismiss();
+                    showToast("数据错误!");
                 }
                 Element element= document.getRootElement();
                 checkCount=Float.valueOf(element.getData().toString());
@@ -236,8 +248,10 @@ public class StorageInBackActivity extends  BaseActivity{
         loadingDialog.setTitle("获取库房信息");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetWarehouseID";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        String url = url_con+"GetWarehouseID";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         final Request request = new Request.Builder()
                 .url(url)
@@ -302,28 +316,32 @@ public class StorageInBackActivity extends  BaseActivity{
         iv_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
-                normalDialog.setCancelable(false);
-                normalDialog.setTitle("退出");
-                normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
-                normalDialog.setPositiveButton("确定",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                CommonUtil.exitActivityAndBackAnim(StorageInBackActivity.this,true);
+                if (isscanned) {
+                    final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
+                    normalDialog.setCancelable(false);
+                    normalDialog.setTitle("退出");
+                    normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+                    normalDialog.setPositiveButton("确定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    CommonUtil.exitActivityAndBackAnim(StorageInBackActivity.this, true);
 
-                            }
-                        });
-                normalDialog.setNegativeButton("取消",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                                }
+                            });
+                    normalDialog.setNegativeButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
 
-                            }
-                        });
+                                }
+                            });
 
-                normalDialog.show();
+                    normalDialog.show();
+                }else {
+                    CommonUtil.exitActivityAndBackAnim(StorageInBackActivity.this, true);
 
+                }
 
             }
         });
@@ -357,6 +375,8 @@ public class StorageInBackActivity extends  BaseActivity{
                                 OrderNumber.setText("扫描订单号");
                                 Barcode.setText("扫描产品码");
                                 infos.setText("产品信息");
+                                checked=false;
+                                isscanned=false;
                             }
                         });
                 normalDialog.setNegativeButton("取消",
@@ -377,11 +397,11 @@ public class StorageInBackActivity extends  BaseActivity{
         post.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (count==1) {
-                    showToast("没有盘点数据！");
-                }else {
+                if (count == 1) {
+                    showToast("没有入库退货数据！");
+                } else {
 
-                    final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
+                    final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
                     normalDialog.setCancelable(false);
                     normalDialog.setTitle("确认");
                     normalDialog.setMessage("确认提交么？");
@@ -389,41 +409,19 @@ public class StorageInBackActivity extends  BaseActivity{
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    if (Float.valueOf(Count.getText().toString())<=checkCount) {
+                                    upload();
+                                    /*if (Float.valueOf(Count.getText().toString())<=checkCount) {
                                         upload();
                                     }else{
                                         final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
                                         normalDialog.setCancelable(false);
                                         normalDialog.setTitle("确认");
-                                        normalDialog.setMessage("退货数目大于库存，确认提交么？");
+                                        normalDialog.setMessage("扫描数目大于库存，确认提交么？");
                                         normalDialog.setPositiveButton("确定",
                                                 new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        if (Float.valueOf(Count.getText().toString())<=checkCount) {
-                                                            upload();
-                                                        }else{
-                                                            final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
-                                                            normalDialog.setCancelable(false);
-                                                            normalDialog.setTitle("确认");
-                                                            normalDialog.setMessage("盘点数目大于库存，确认提交么？");
-                                                            normalDialog.setPositiveButton("确定",
-                                                                    new DialogInterface.OnClickListener() {
-                                                                        @Override
-                                                                        public void onClick(DialogInterface dialog, int which) {
-                                                                            upload();
-                                                                        }
-                                                                    });
-                                                            normalDialog.setNegativeButton("取消",
-                                                                    new DialogInterface.OnClickListener() {
-                                                                        @Override
-                                                                        public void onClick(DialogInterface dialog, int which) {
-
-                                                                        }
-                                                                    });
-
-                                                            normalDialog.show();
-                                                        }
+                                                        upload();
                                                     }
                                                 });
                                         normalDialog.setNegativeButton("取消",
@@ -435,7 +433,7 @@ public class StorageInBackActivity extends  BaseActivity{
                                                 });
 
                                         normalDialog.show();
-                                    }
+                                    }*/
                                 }
                             });
                     normalDialog.setNegativeButton("取消",
@@ -447,8 +445,6 @@ public class StorageInBackActivity extends  BaseActivity{
                             });
 
                     normalDialog.show();
-
-
                 }
             }
         });
@@ -461,8 +457,10 @@ public class StorageInBackActivity extends  BaseActivity{
             loadingDialog.setTitle("正在上传数据");
             loadingDialog.setCancelable(false);
             loadingDialog.show();
-            String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitReceiptBackIntoData";
-            OkHttpClient okHttpClient = new OkHttpClient();
+            String url = url_con+"SubmitReceiptBackIntoData";
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
             okHttpClient.sslSocketFactory();
             RequestBody body = new FormBody.Builder()
                     .add("OrderNumber",OrderNumber.getText().toString())
@@ -498,6 +496,8 @@ public class StorageInBackActivity extends  BaseActivity{
                     try {
                         document = DocumentHelper.parseText(result);
                     } catch (DocumentException e) {
+                        loadingDialog.dismiss();
+                        showToast("数据获取失败!");
                         e.printStackTrace();
                     }
                     Element element = document.getRootElement();
@@ -515,6 +515,7 @@ public class StorageInBackActivity extends  BaseActivity{
                                 showToast("上传成功!");
                                 checked=false;
                                 checkCount=0;
+                                isscanned=false;
                                 loadingDialog.dismiss();
                             }
                         });
@@ -547,28 +548,31 @@ public class StorageInBackActivity extends  BaseActivity{
 
     @Override
     public void onBackPressed() {
+if (isscanned) {
+    final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
+    normalDialog.setCancelable(false);
+    normalDialog.setTitle("退出");
+    normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+    normalDialog.setPositiveButton("确定",
+            new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    CommonUtil.exitActivityAndBackAnim(StorageInBackActivity.this, true);
 
-        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(StorageInBackActivity.this);
-        normalDialog.setCancelable(false);
-        normalDialog.setTitle("退出");
-        normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
-        normalDialog.setPositiveButton("确定",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        CommonUtil.exitActivityAndBackAnim(StorageInBackActivity.this,true);
+                }
+            });
+    normalDialog.setNegativeButton("取消",
+            new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                });
-        normalDialog.setNegativeButton("取消",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                }
+            });
 
-                    }
-                });
+    normalDialog.show();
+}else {
+    CommonUtil.exitActivityAndBackAnim(StorageInBackActivity.this, true);
 
-        normalDialog.show();
-
+}
     }
 }

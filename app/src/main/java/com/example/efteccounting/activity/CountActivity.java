@@ -25,6 +25,7 @@ import org.dom4j.Element;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import bean.Constants;
 import butterknife.BindView;
@@ -61,7 +62,7 @@ public class CountActivity extends  BaseActivity{
     Button reset;
     private String barcode="";
     private String info="";
-
+    private boolean isscaned=false;
     private Dialog loadingDialog;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -86,6 +87,7 @@ public class CountActivity extends  BaseActivity{
         }
         String infosString[]=decode.split(";");
         if (infosString.length==6) {
+            isscaned=true;
             for (int i = 0; i < infosString.length; i++) {
                 switch (i) {
                     case 0:
@@ -142,7 +144,9 @@ public class CountActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitStartTakeInventory";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         RequestBody body = new FormBody.Builder()
                 .add("WarehouseCode",warehouse_id)
@@ -201,7 +205,9 @@ public class CountActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitFinishTakeInventory";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         RequestBody body = new FormBody.Builder()
                 .add("WarehouseCode",warehouse_id)
@@ -263,7 +269,9 @@ public class CountActivity extends  BaseActivity{
             loadingDialog.show();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTakeInventoryData";
-            OkHttpClient okHttpClient = new OkHttpClient();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
             okHttpClient.sslSocketFactory();
             RequestBody body = new FormBody.Builder()
                     .add("Barcode", barcode)
@@ -284,7 +292,9 @@ public class CountActivity extends  BaseActivity{
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showToast(e.getMessage());
+
+                            showToast("上传失败!");
+                            loadingDialog.dismiss();
                         }
                     });
                 }
@@ -310,6 +320,7 @@ public class CountActivity extends  BaseActivity{
                                 infos.setText("产品信息");
                                 count = 1;
                                 showToast("上传成功!");
+                                isscaned=false;
                                 loadingDialog.dismiss();
                             }
                         });
@@ -335,6 +346,7 @@ public class CountActivity extends  BaseActivity{
                 if (count == 1) {
                     showToast("没有盘点数据!");
                 } else {
+
                     final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
                     normalDialog.setCancelable(false);
                     normalDialog.setTitle("上传确认");
@@ -365,6 +377,7 @@ public class CountActivity extends  BaseActivity{
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
                 normalDialog.setCancelable(false);
                 normalDialog.setTitle("重扫");
@@ -378,6 +391,7 @@ public class CountActivity extends  BaseActivity{
                                 Barcode.setText("扫描产品码");
                                 infos.setText("产品信息");
                                 count = 1;
+                                isscaned=false;
                             }
                         });
                 normalDialog.setNegativeButton("取消",
@@ -426,27 +440,33 @@ public class CountActivity extends  BaseActivity{
         iv_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
-                normalDialog.setCancelable(false);
-                normalDialog.setTitle("退出");
-                normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
-                normalDialog.setPositiveButton("确定",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                CommonUtil.exitActivityAndBackAnim(CountActivity.this,true);
+                if (!isscaned){
+                    CommonUtil.exitActivityAndBackAnim(CountActivity.this, true);
 
-                            }
-                        });
-                normalDialog.setNegativeButton("取消",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                }
+                else {
+                    final androidx.appcompat.app.AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+                    normalDialog.setCancelable(false);
+                    normalDialog.setTitle("退出");
+                    normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+                    normalDialog.setPositiveButton("确定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    CommonUtil.exitActivityAndBackAnim(CountActivity.this, true);
 
-                            }
-                        });
+                                }
+                            });
+                    normalDialog.setNegativeButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
 
-                normalDialog.show();
+                                }
+                            });
+
+                    normalDialog.show();
+                }
 
             }
         });
@@ -466,28 +486,32 @@ public class CountActivity extends  BaseActivity{
 
     @Override
     public void onBackPressed() {
+        if (!isscaned){
+            CommonUtil.exitActivityAndBackAnim(CountActivity.this, true);
 
-        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
-        normalDialog.setCancelable(false);
-        normalDialog.setTitle("退出");
-        normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
-        normalDialog.setPositiveButton("确定",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        CommonUtil.exitActivityAndBackAnim(CountActivity.this,true);
+        }
+        else {
+            final AlertDialog.Builder normalDialog = new AlertDialog.Builder(CountActivity.this);
+            normalDialog.setCancelable(false);
+            normalDialog.setTitle("退出");
+            normalDialog.setMessage("确认退出么，扫描到数据都会消失？");
+            normalDialog.setPositiveButton("确定",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            CommonUtil.exitActivityAndBackAnim(CountActivity.this, true);
 
-                    }
-                });
-        normalDialog.setNegativeButton("取消",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+            normalDialog.setNegativeButton("取消",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                });
+                        }
+                    });
 
-        normalDialog.show();
-
+            normalDialog.show();
+        }
     }
 }

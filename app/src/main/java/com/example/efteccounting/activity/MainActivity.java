@@ -2,13 +2,10 @@ package com.example.efteccounting.activity;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -123,7 +120,7 @@ public class MainActivity extends BaseActivity {
                         break;
                     case 1:
 
-                        Intent intent1= new Intent(MainActivity.this, StorageOutBackActivity.class);
+                        Intent intent1= new Intent(MainActivity.this, StorageOutBackUpActivity.class);
                         startActivity(intent1);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;

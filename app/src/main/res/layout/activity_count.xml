@@ -76,14 +76,14 @@
             android:paddingLeft="3dp"
             android:id="@+id/infos"
             android:layout_width="match_parent"
-            android:layout_height="180sp"
+            android:layout_height="150sp"
             android:hint="货品信息"
             android:gravity="top"
             android:layout_marginTop="32dp"
             android:background="@drawable/bg_edittext"
             android:inputType="textMultiLine"
             android:enabled="false"
-            android:textSize="20sp" />
+            android:textSize="15sp" />
         </LinearLayout>
 <RelativeLayout
     android:layout_width="match_parent"
