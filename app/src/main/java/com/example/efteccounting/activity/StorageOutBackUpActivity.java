@@ -37,6 +37,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.OkhttpClientUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
@@ -307,8 +308,10 @@ public class StorageOutBackUpActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = url_con+"SubmitTransferBackOutData";
-        OkHttpClient okHttpClient = new OkHttpClient();
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitTransferBackOutData";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder() .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
         RequestBody body = new FormBody.Builder()
                 .add("OrderNumber",OrderNumber.getText().toString())
@@ -385,8 +388,9 @@ public class StorageOutBackUpActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = url_con+"GetWarehouseCodeFrom";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseCodeFrom";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -432,55 +436,6 @@ public class StorageOutBackUpActivity extends  BaseActivity{
         });
     }
 
-   /* private void getcount(String decode){
-
-        loadingDialog=   new ProgressDialog(StorageOutBackUpActivity.this);
-        loadingDialog.setTitle("获取库房数据");
-        loadingDialog.setCancelable(false);
-        loadingDialog.show();
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/GetReceiptIntoCheckCount";
-        OkHttpClient okHttpClient = new OkHttpClient();
-        okHttpClient.sslSocketFactory();
-        RequestBody body = new FormBody.Builder()
-                .add("OrderNumber",OrderNumber.getText().toString())
-                .add("Barcode",decode)
-                .build();
-        final Request request = new Request.Builder()
-                .url(url)
-                .post(body)//默认就是GET请求，可以不写
-                .build();
-        Call call = okHttpClient.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.d(TAG, "onFailure: "+e.getMessage());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showToast(e.getMessage());
-                        loadingDialog.dismiss();
-                    }
-                });
-            }
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String result=response.body().string();
-                Log.d(TAG, "onResponse: "+result);
-                Document document = null;
-                try {
-                    document = DocumentHelper.parseText(result);
-                } catch (DocumentException e) {
-                    e.printStackTrace();
-                }
-                Element element= document.getRootElement();
-                checkCount=Float.valueOf(element.getData().toString());
-                Log.v(TAG,String.valueOf(checkCount));
-                checked=true;
-                getWarehousid(decode);
-            }
-        });
-    }*/
     @Override
     protected void onPause() {
         super.onPause();

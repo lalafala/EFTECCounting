@@ -51,6 +51,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.OkhttpClientUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
@@ -88,11 +89,11 @@ public class LoginActivity extends BaseActivity {
                     final String decode = intent.getStringExtra("data");
                     Log.v(TAG, decode);
                     if (isopen) {
-                        if (decode.startsWith("http://")) {
+                        if (decode.startsWith("http://") ||decode.startsWith("https://") ) {
                             url_con = decode;
                             input.setText(url_con);
                         }else {
-                            showToast("服务器地址必须以http://开头");
+                            showToast("服务器地址必须以http://或者https://开头");
                         }
                     }
 
@@ -115,12 +116,12 @@ public class LoginActivity extends BaseActivity {
                 alert.setPositiveButton("设置", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         String value = input.getText().toString().trim();
-                        if (value.startsWith("http://")) {
+                        if (value.startsWith("http://") ||value.startsWith("https://")) {
                             SPUtils.put("url_con", value);
                             url_con = SPUtils.get("url_con", "").toString();
                             test();
                         }else {
-                            showToast("服务器地址必须以http://开头");
+                            showToast("服务器地址必须以http://或者https://开头");
                         }
                         isopen=false;
                     }
@@ -167,8 +168,9 @@ public class LoginActivity extends BaseActivity {
                         loadingDialog.setTitle("登录...");
                         loadingDialog.setCancelable(false);
                         loadingDialog.show();
-                        String url = url_con+"UserLogin";
-                        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"UserLogin";
+                        OkHttpClient okHttpClient =OkhttpClientUtil.getUnsafeOkHttpClient();
+                        okHttpClient.newBuilder()
                                 .connectTimeout(5, TimeUnit.SECONDS)
                                 .readTimeout(5,TimeUnit.SECONDS).build();
                         okHttpClient.sslSocketFactory();
@@ -265,8 +267,10 @@ public class LoginActivity extends BaseActivity {
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         Log.e(TAG,url_con);
-        String url = url_con+"GetWarehouseID";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+       // String url = url_con+"GetWarehouseID";
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
+        OkHttpClient okHttpClient =OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -334,8 +338,9 @@ public class LoginActivity extends BaseActivity {
         loadingDialog.setTitle("测试服务器地址");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = url_con+"DBTest";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"DBTest";
+        OkHttpClient okHttpClient =OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -347,37 +352,47 @@ public class LoginActivity extends BaseActivity {
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                //Log.d(TAG, "onFailure: "+e.getMessage());
-                loadingDialog.dismiss();
-                showToast("网址错误，请设置正确的服务器地址!");
+                Log.d(TAG, "onFailure: "+e.getMessage());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadingDialog.dismiss();
+                        showToast("网址错误，请设置正确的服务器地址!");
+                    }
+                });
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
 
                 String result = response.body().string();
-                Log.d(TAG, "onResponse: " + result);
-                if (!result.startsWith("<!DOCTYPE html>")) {
-                    try {
-                        Document document = DocumentHelper.parseText(result);
-                        Element element = document.getRootElement();
-
-                        if (element.getData().toString().equals("admin/EFT001/EFT002/EFT003/EFT004/")) {
-                            loadingDialog.dismiss();
-                            showToast("网址设置成功,点击重新获取按钮!");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "onResponse: " + result);
+                        if (!result.startsWith("<!DOCTYPE html>")) {
+                            try {
+                                Document document = DocumentHelper.parseText(result);
+                                Element element = document.getRootElement();
+                                String values = element.attributeValue("string");
+                                if (element.getData().toString().equals("admin/EFT001/EFT002/EFT003/EFT004/")) {
+                                    loadingDialog.dismiss();
+                                    showToast("网址设置成功,点击重新获取按钮!");
+                                } else {
+                                    loadingDialog.dismiss();
+                                    showToast("网址错误，请设置正确的服务器地址!");
+                                }
+                            } catch (Exception e) {
+                                loadingDialog.dismiss();
+                                showToast("网址错误，请设置正确的服务器地址!");
+                            }
                         } else {
                             loadingDialog.dismiss();
+                            //  bt_login.setEnabled(false);
                             showToast("网址错误，请设置正确的服务器地址!");
                         }
-                    } catch (Exception e) {
-                        loadingDialog.dismiss();
-                        showToast("网址错误，请设置正确的服务器地址!");
                     }
-                }else {
-                    loadingDialog.dismiss();
-                          //  bt_login.setEnabled(false);
-                            showToast("网址错误，请设置正确的服务器地址!");
-                }
+                });
             }
         });
     }
@@ -388,9 +403,9 @@ public class LoginActivity extends BaseActivity {
         input=new EditText(LoginActivity.this);
         niceSpinner= (NiceSpinner)findViewById(R.id.nice_spiner);
         username=(EditText)findViewById(R.id.username);
-        username.setText("EFT003");
+    //    username.setText("EFT003");
         password=(EditText)findViewById(R.id.password);
-        password.setText("12345");
+       // password.setText("12345");
         url_con=SPUtils.get("url_con", Constants.url_con).toString();
         if (url_con.equals("")){
             url_con=Constants.url_con;

@@ -36,6 +36,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.OkhttpClientUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
@@ -129,8 +130,9 @@ public class SearchActivity extends  BaseActivity{
         loadingDialog.setTitle("查询中");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = url_con+"QueryGoodsStatus";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"QueryGoodsStatus";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();

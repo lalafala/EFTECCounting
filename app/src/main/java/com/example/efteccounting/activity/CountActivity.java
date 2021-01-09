@@ -37,6 +37,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.OkhttpClientUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
@@ -143,8 +144,9 @@ public class CountActivity extends  BaseActivity{
         loadingDialog.setTitle("开始盘点");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitStartTakeInventory";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitStartTakeInventory";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();

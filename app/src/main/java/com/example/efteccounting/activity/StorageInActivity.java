@@ -37,6 +37,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.OkhttpClientUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
@@ -306,8 +307,9 @@ public class StorageInActivity  extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = url_con+"SubmitReceiptIntoData";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitReceiptIntoData";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -384,8 +386,9 @@ public class StorageInActivity  extends  BaseActivity{
 
     private void getWarehousid(String decode){
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = url_con+"GetWarehouseCodeFrom";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseCodeFrom";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -436,8 +439,9 @@ public class StorageInActivity  extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = url_con+"GetReceiptIntoCheckCount";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetReceiptIntoCheckCount";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();

@@ -43,6 +43,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
+import utils.OkhttpClientUtil;
 import utils.SPUtils;
 import utils.ToastUtils;
 
@@ -136,8 +137,9 @@ public class StorageInBackActivity extends  BaseActivity{
         loadingDialog.setTitle("获取库房数据");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = url_con+"GetReceiptIntoCheckCount";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetReceiptIntoCheckCount";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -248,8 +250,9 @@ public class StorageInBackActivity extends  BaseActivity{
         loadingDialog.setTitle("获取库房信息");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = url_con+"GetWarehouseID";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
+        OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+        okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
         okHttpClient.sslSocketFactory();
@@ -450,26 +453,29 @@ public class StorageInBackActivity extends  BaseActivity{
         });
     }
 
-    private void upload(){
-            SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-            String warename=niceSpinner.getText().toString();
-            loadingDialog=   new ProgressDialog(StorageInBackActivity.this);
+
+        private void upload () {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            String warename = niceSpinner.getText().toString();
+            loadingDialog = new ProgressDialog(StorageInBackActivity.this);
             loadingDialog.setTitle("正在上传数据");
             loadingDialog.setCancelable(false);
             loadingDialog.show();
-            String url = url_con+"SubmitReceiptBackIntoData";
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5,TimeUnit.SECONDS).build();
+            String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/" + "SubmitReceiptBackIntoData";
+            OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
+            okHttpClient.newBuilder()
+                    .connectTimeout(5, TimeUnit.SECONDS)
+                    .readTimeout(5, TimeUnit.SECONDS).build();
             okHttpClient.sslSocketFactory();
+            Log.v(TAG, warehouse_id + ":" + warehouseidMaps.get(warename).toString());
             RequestBody body = new FormBody.Builder()
-                    .add("OrderNumber",OrderNumber.getText().toString())
-                    .add("Barcode",barcode)
-                    .add("WarehouseCodeFrom",warehouse_id)
+                    .add("OrderNumber", OrderNumber.getText().toString())
+                    .add("Barcode", barcode)
+                    .add("WarehouseCodeFrom", warehouse_id)
                     .add("WarehouseCodeTo", warehouseidMaps.get(warename).toString())
-                    .add("Count",Count.getText().toString())
-                    .add("UserName",current_username)
-                    .add("ScanDate",sdf.format(new Date()))
+                    .add("Count", Count.getText().toString())
+                    .add("UserName", current_username)
+                    .add("ScanDate", sdf.format(new Date()))
                     .build();
             final Request request = new Request.Builder()
                     .url(url)
@@ -479,7 +485,7 @@ public class StorageInBackActivity extends  BaseActivity{
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.d(TAG, "onFailure: "+e.getMessage());
+                    Log.d(TAG, "onFailure: " + e.getMessage());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -488,6 +494,7 @@ public class StorageInBackActivity extends  BaseActivity{
                         }
                     });
                 }
+
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     String result = response.body().string();
@@ -497,7 +504,7 @@ public class StorageInBackActivity extends  BaseActivity{
                         document = DocumentHelper.parseText(result);
                     } catch (DocumentException e) {
                         loadingDialog.dismiss();
-                        showToast("数据获取失败!");
+                        showToast("数据错误!");
                         e.printStackTrace();
                     }
                     Element element = document.getRootElement();
@@ -513,10 +520,11 @@ public class StorageInBackActivity extends  BaseActivity{
                                 Barcode.setText("扫描产品码");
                                 infos.setText("产品信息");
                                 showToast("上传成功!");
-                                checked=false;
-                                checkCount=0;
-                                isscanned=false;
+                                checked = false;
+                                checkCount = 0;
+                                isscanned = false;
                                 loadingDialog.dismiss();
+
                             }
                         });
                     } else {
@@ -532,7 +540,7 @@ public class StorageInBackActivity extends  BaseActivity{
             });
 
 
-    }
+        }
 
     @Override
     protected void onPause() {
