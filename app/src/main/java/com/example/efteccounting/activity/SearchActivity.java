@@ -38,6 +38,7 @@ import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class SearchActivity extends  BaseActivity{
@@ -46,7 +47,7 @@ public class SearchActivity extends  BaseActivity{
     private String current_username;
     private String warehouse_id;
 
-    private String url_con=SPUtils.get("url_con","").toString();
+  //  private String url_con=SPUtils.get("url_con","").toString();
     @BindView(R.id.Barcode)
     EditText Barcode;
     @BindView(R.id.Count)
@@ -55,10 +56,9 @@ public class SearchActivity extends  BaseActivity{
     EditText infos;
 
 
+    private String url_con;
 
 
-
-    private String barcode="";
     private String info="";
 
     private Dialog loadingDialog;
@@ -68,8 +68,6 @@ public class SearchActivity extends  BaseActivity{
                 if (intent.hasExtra("data")) {
                     final String decode = intent.getStringExtra("data");
                     Log.v(TAG, decode);
-
-
                                 showScandata(decode);
                                 getCount(decode);
 
@@ -103,6 +101,7 @@ public class SearchActivity extends  BaseActivity{
                         break;
                 }
             }
+            Barcode.setText(decode);
             infos.setText(info);
         }else {
             showToast("货物码格式错误!");
@@ -123,6 +122,7 @@ public class SearchActivity extends  BaseActivity{
         tv_center_title.setText("查询");
         iv_back.setVisibility(View.VISIBLE);
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+        url_con= StreamUtils.read();
     }
 
     private void getCount(String decode){
@@ -130,7 +130,8 @@ public class SearchActivity extends  BaseActivity{
         loadingDialog.setTitle("查询中");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"QueryGoodsStatus";
+        String url=url_con+"QueryGoodsStatus";
+       // String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"QueryGoodsStatus";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -172,7 +173,11 @@ public class SearchActivity extends  BaseActivity{
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Count.setText(element.getData().toString());
+                            if (element.getData().toString().equals("-1")){
+                                Count.setText("无此产品信息");
+                            }else {
+                                Count.setText(element.getData().toString());
+                            }
                             loadingDialog.dismiss();
                         }
                     });

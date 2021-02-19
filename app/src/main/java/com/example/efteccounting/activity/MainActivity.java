@@ -51,12 +51,12 @@ public class MainActivity extends BaseActivity {
         FunctionType functionType=new FunctionType();
         functionType.des="收货入库";
         functionType.img=R.mipmap.p2;
-        FunctionType functionType1=new FunctionType();
+        /*FunctionType functionType1=new FunctionType();
         functionType1.des="入库退货";
         functionType1.img=R.mipmap.down;
         FunctionType functionType2=new FunctionType();
         functionType2.des="出库退货";
-        functionType2.img=R.mipmap.up;
+        functionType2.img=R.mipmap.up;*/
         FunctionType functionType3=new FunctionType();
         functionType3.des="发货出库";
         functionType3.img=R.mipmap.p3;
@@ -67,9 +67,9 @@ public class MainActivity extends BaseActivity {
         functionType5.des="查询";
         functionType5.img=R.mipmap.l1;
         mList.add(functionType);
-        mList.add(functionType2);
+       // mList.add(functionType2);
         mList.add(functionType3);
-        mList.add(functionType1);
+      //  mList.add(functionType1);
         mList.add(functionType4);
         mList.add(functionType5);
         mAdapter = new FunTypeAdapter(R.layout.item_iv_tv1,mList);
@@ -112,30 +112,32 @@ public class MainActivity extends BaseActivity {
                         startActivity(intent);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
-                    case 3:
+                  /*  case 3:
 
                         Intent intent3= new Intent(MainActivity.this, StorageInBackActivity.class);
                         startActivity(intent3);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
-                        break;
-                    case 1:
+                        break;*/
+                   /* case 1:
 
                         Intent intent1= new Intent(MainActivity.this, StorageOutBackUpActivity.class);
                         startActivity(intent1);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                         break;
-                    case 2:
+                        */
+
+                    case 1:
                         //入库
                         Intent intent2 = new Intent(MainActivity.this, StorageOutActivity.class);
                         startActivity(intent2);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                        break;
-                    case 4:
+                    case 2:
                         Intent intent4 = new Intent(MainActivity.this, CountActivity.class);
                         startActivity(intent4);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);
                        break;
-                    case 5:
+                    case 3:
                         Intent intent5 = new Intent(MainActivity.this, SearchActivity.class);
                         startActivity(intent5);
                         CommonUtil.openNewActivityAnim(MainActivity.this, false);

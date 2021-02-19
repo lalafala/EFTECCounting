@@ -39,6 +39,7 @@ import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class StorageInActivity  extends  BaseActivity{
@@ -51,7 +52,7 @@ public class StorageInActivity  extends  BaseActivity{
    private float checkCount=-1;
    private boolean checked=false;
    private String warehouse_from;
-    private String url_con=SPUtils.get("url_con","").toString();
+    private String url_con;
     @BindView(R.id.OrderNumber)
     TextView OrderNumber;
     @BindView(R.id.Barcode)
@@ -175,6 +176,7 @@ public class StorageInActivity  extends  BaseActivity{
         tv_center_title.setText("入库");
         iv_back.setVisibility(View.VISIBLE);
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+        url_con= StreamUtils.read();
     }
 
     @Override
@@ -307,7 +309,8 @@ public class StorageInActivity  extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitReceiptIntoData";
+        String url=url_con+"SubmitReceiptIntoData";
+      //  String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitReceiptIntoData";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -386,7 +389,8 @@ public class StorageInActivity  extends  BaseActivity{
 
     private void getWarehousid(String decode){
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseCodeFrom";
+        String url=url_con+"GetWarehouseCodeFrom";
+        // String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseCodeFrom";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -439,7 +443,8 @@ public class StorageInActivity  extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetReceiptIntoCheckCount";
+        String url=url_con+"GetReceiptIntoCheckCount";
+        //String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetReceiptIntoCheckCount";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)

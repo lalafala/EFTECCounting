@@ -30,6 +30,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.json.JSONObject;
+import org.json.JSONStringer;
 import org.xml.sax.InputSource;
 
 import java.io.IOException;
@@ -52,7 +54,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
+import utils.PermissionUtils;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class LoginActivity extends BaseActivity {
@@ -90,8 +94,7 @@ public class LoginActivity extends BaseActivity {
                     Log.v(TAG, decode);
                     if (isopen) {
                         if (decode.startsWith("http://") ||decode.startsWith("https://") ) {
-                            url_con = decode;
-                            input.setText(url_con);
+                            input.setText(decode);
                         }else {
                             showToast("服务器地址必须以http://或者https://开头");
                         }
@@ -111,14 +114,22 @@ public class LoginActivity extends BaseActivity {
                 alert.setCancelable(false);
               //  url_con=SPUtils.get("url_con","").toString();
                 input=new EditText(LoginActivity.this);
+                if (url_con.equals("")){
+                    url_con="https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/";
+                }
                 input.setText(url_con);
                alert.setView(input);
                 alert.setPositiveButton("设置", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
+
                         String value = input.getText().toString().trim();
                         if (value.startsWith("http://") ||value.startsWith("https://")) {
-                            SPUtils.put("url_con", value);
-                            url_con = SPUtils.get("url_con", "").toString();
+                            url_con=value;
+                            try {
+                                StreamUtils.write(value);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             test();
                         }else {
                             showToast("服务器地址必须以http://或者https://开头");
@@ -168,7 +179,8 @@ public class LoginActivity extends BaseActivity {
                         loadingDialog.setTitle("登录...");
                         loadingDialog.setCancelable(false);
                         loadingDialog.show();
-                        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"UserLogin";
+                        String url = url_con+"UserLogin";
+                        //String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"UserLogin";
                         OkHttpClient okHttpClient =OkhttpClientUtil.getUnsafeOkHttpClient();
                         okHttpClient.newBuilder()
                                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -227,12 +239,13 @@ public class LoginActivity extends BaseActivity {
                             }
                         });
                     } else {
-                        Toast.makeText(getApplicationContext(), "请输入用户名", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "请输入用户名或密码", Toast.LENGTH_SHORT).show();
                     }
                 }else {
-                    showToast("查看网络连接!");
+                    showToast("查看网络或者设置服务器地址并点击重新获取按钮!");
                 }
             }
+
         });
 
     }
@@ -267,8 +280,8 @@ public class LoginActivity extends BaseActivity {
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         Log.e(TAG,url_con);
-       // String url = url_con+"GetWarehouseID";
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
+       String url = url_con+"GetWarehouseID";
+       // String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
         OkHttpClient okHttpClient =OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -338,7 +351,8 @@ public class LoginActivity extends BaseActivity {
         loadingDialog.setTitle("测试服务器地址");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"DBTest";
+        String url = url_con+"DBTest";
+        //String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"DBTest";
         OkHttpClient okHttpClient =OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -399,24 +413,20 @@ public class LoginActivity extends BaseActivity {
     @Override
     public void initView() {
         super.initView();
+       url_con= StreamUtils.read();
         ToastUtils.init(this);
         input=new EditText(LoginActivity.this);
         niceSpinner= (NiceSpinner)findViewById(R.id.nice_spiner);
         username=(EditText)findViewById(R.id.username);
-    //    username.setText("EFT003");
         password=(EditText)findViewById(R.id.password);
-       // password.setText("12345");
-        url_con=SPUtils.get("url_con", Constants.url_con).toString();
-        if (url_con.equals("")){
-            url_con=Constants.url_con;
-        }
+
         loadData();
     }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-       /* PermissionUtils.isGrantExternalRW(this,1);*/
+        PermissionUtils.isGrantExternalRW(this,1);
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
 
     }

@@ -45,6 +45,7 @@ import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class StorageOutActivity extends  BaseActivity{
@@ -73,7 +74,7 @@ public class StorageOutActivity extends  BaseActivity{
     Button reset;
     @BindView(R.id.nice_spiner)
     NiceSpinner niceSpinner;
-    private String url_con=SPUtils.get("url_con","").toString();
+    private String url_con;
     private String barcode="";
     private String info="";
     private String wareto;
@@ -191,13 +192,14 @@ public class StorageOutActivity extends  BaseActivity{
         tv_center_title.setVisibility(View.VISIBLE);
         tv_center_title.setText("出库");
         iv_back.setVisibility(View.VISIBLE);
-
+        url_con= StreamUtils.read();
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
         loadingDialog=   new ProgressDialog(StorageOutActivity.this);
         loadingDialog.setTitle("获取库房信息");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
+        String url=url_con+"GetWarehouseID";
+       // String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -259,7 +261,8 @@ public class StorageOutActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
       //  SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetTransferOutCheckCount";
+        String url=url_con+"GetTransferOutCheckCount";
+     //   String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetTransferOutCheckCount";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -455,7 +458,8 @@ public class StorageOutActivity extends  BaseActivity{
             loadingDialog.setTitle("正在上传数据");
             loadingDialog.setCancelable(false);
             loadingDialog.show();
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitTransferOutData";
+            String url=url_con+"SubmitTransferOutData";
+      //  String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitTransferOutData";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)

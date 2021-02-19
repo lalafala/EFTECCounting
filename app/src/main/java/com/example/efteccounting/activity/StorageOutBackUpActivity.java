@@ -39,12 +39,13 @@ import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class StorageOutBackUpActivity extends  BaseActivity{
     private final static String ACTION_HONEYWLL = "com.honeywell";
     private static final String TAG = "StorageInBackUpActivity";
-    private String url_con=SPUtils.get("url_con","").toString();
+    private String url_con;
     private String current_username;
     private String warehouse_id;
     private int count=1;
@@ -175,6 +176,7 @@ public class StorageOutBackUpActivity extends  BaseActivity{
         tv_center_title.setText("出库退货");
         iv_back.setVisibility(View.VISIBLE);
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+        url_con= StreamUtils.read();
     }
 
     @Override
@@ -308,7 +310,8 @@ public class StorageOutBackUpActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitTransferBackOutData";
+        String url=url_con+"SubmitTransferBackOutData";
+        //String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitTransferBackOutData";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder() .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
@@ -388,7 +391,8 @@ public class StorageOutBackUpActivity extends  BaseActivity{
         loadingDialog.setCancelable(false);
         loadingDialog.show();
         SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd");
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseCodeFrom";
+        String url=url_con+"GetWarehouseCodeFrom";
+      //  String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseCodeFrom";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)

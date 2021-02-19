@@ -14,15 +14,15 @@
         android:background="@mipmap/lanch"
         tools:visibility="gone" />
 
-<TextView
-    android:id="@+id/txtver"
-    android:layout_alignParentBottom="true"
-    android:layout_marginBottom="8sp"
-    android:gravity="center"
-    android:textSize="18sp"
-    android:text="v 1.0"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"/>
+    <TextView
+        android:id="@+id/txtver"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="8sp"
+        android:gravity="center"
+        android:text="v 1.2"
+        android:textSize="18sp" />
 
 
 

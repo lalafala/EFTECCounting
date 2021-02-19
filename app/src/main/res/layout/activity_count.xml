@@ -36,7 +36,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48sp"
                 android:hint="扫描产品码"
-
+                android:enabled="false"
                 android:background="@drawable/bg_edittext"
                 android:paddingLeft="8dp"
                 android:paddingRight="8sp"

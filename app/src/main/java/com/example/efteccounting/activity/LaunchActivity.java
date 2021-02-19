@@ -17,6 +17,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import utils.StreamUtils;
 
 
 public class LaunchActivity extends BaseActivity{
@@ -34,7 +35,16 @@ public class LaunchActivity extends BaseActivity{
     @Override
     public void initData() {
         super.initData();
-
+        File file =new File(Environment.getExternalStorageDirectory() +"/url");
+        if (!file.exists())
+        {
+            file.mkdir();
+            try {
+                StreamUtils.write("https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
       /*  String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/DBTest";
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -95,8 +105,10 @@ public class LaunchActivity extends BaseActivity{
     public void initView() {
         super.initView();
         try {
+
             txtver.setText(getPackageManager().
                     getPackageInfo(getPackageName(), 0).versionName);
+
         }catch (Exception e)
         {e.printStackTrace();}
     }

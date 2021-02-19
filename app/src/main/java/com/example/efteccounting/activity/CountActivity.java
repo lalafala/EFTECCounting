@@ -39,6 +39,7 @@ import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class CountActivity extends  BaseActivity{
@@ -47,7 +48,7 @@ public class CountActivity extends  BaseActivity{
     private String current_username;
     private String warehouse_id;
     private int count=1;
-
+    private String url_con;
     @BindView(R.id.Barcode)
     EditText Barcode;
     @BindView(R.id.Count)
@@ -136,6 +137,7 @@ public class CountActivity extends  BaseActivity{
         tv_right_title.setVisibility(View.VISIBLE);
         iv_back.setVisibility(View.VISIBLE);
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
+        url_con= StreamUtils.read();
         startCount();
     }
 
@@ -144,7 +146,8 @@ public class CountActivity extends  BaseActivity{
         loadingDialog.setTitle("开始盘点");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitStartTakeInventory";
+       String url =url_con+"SubmitStartTakeInventory";
+        //String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"SubmitStartTakeInventory";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -206,7 +209,8 @@ public class CountActivity extends  BaseActivity{
         loadingDialog.setTitle("结束盘点");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitFinishTakeInventory";
+        String url =url_con+"SubmitFinishTakeInventory";
+      //  String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitFinishTakeInventory";
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();
@@ -226,8 +230,9 @@ public class CountActivity extends  BaseActivity{
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        loadingDialog.dismiss();
                         showToast(e.getMessage());
-                        showToast("结束盘点失败");
+                        showToast("结束盘点失败,请重新结束!");
                     }
                 });
             }
@@ -246,6 +251,7 @@ public class CountActivity extends  BaseActivity{
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            showToast("盘点结束!");
                             loadingDialog.dismiss();
                             CommonUtil.exitActivityAndBackAnim(CountActivity.this,true);
                         }
@@ -254,7 +260,7 @@ public class CountActivity extends  BaseActivity{
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showToast("结束盘点失败");
+                            showToast("结束盘点失败,请重新结束!");
                             loadingDialog.dismiss();
                         }
                     });
@@ -270,7 +276,8 @@ public class CountActivity extends  BaseActivity{
             loadingDialog.setCancelable(false);
             loadingDialog.show();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-            String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTakeInventoryData";
+        String url =url_con+"SubmitTakeInventoryData";
+            //String url = "http://s36309d676.qicp.vip/WebServiceForSqlserver.asmx/SubmitTakeInventoryData";
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5,TimeUnit.SECONDS).build();

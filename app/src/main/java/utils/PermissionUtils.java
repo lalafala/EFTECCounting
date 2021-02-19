@@ -9,7 +9,7 @@ public class PermissionUtils {
     //这是要申请的权限
     private static String[] PERMISSIONS_CAMERA_BLUETOOTH_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_COARSE_LOCATION};
+            Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     /**
      * 解决安卓6.0以上版本不能读取外部存储权限的问题
@@ -23,15 +23,9 @@ public class PermissionUtils {
 
             int storagePermission = activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             int readPermission = activity.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            int cameraPermission = activity.checkSelfPermission(Manifest.permission.CAMERA);
-            int blutoothPermission = activity.checkSelfPermission(Manifest.permission.BLUETOOTH_ADMIN);
-            int locationPermission = activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+
             //检测是否有权限，如果没有权限，就需要申请
             if (storagePermission != PackageManager.PERMISSION_GRANTED ||
-                    cameraPermission != PackageManager.PERMISSION_GRANTED||
-                    blutoothPermission != PackageManager.PERMISSION_GRANTED||
-                    locationPermission != PackageManager.PERMISSION_GRANTED
-                    ||
                     readPermission != PackageManager.PERMISSION_GRANTED) {
                 //申请权限
                 activity.requestPermissions(PERMISSIONS_CAMERA_BLUETOOTH_STORAGE, requestCode);

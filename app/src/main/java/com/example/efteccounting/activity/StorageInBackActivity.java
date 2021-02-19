@@ -45,6 +45,7 @@ import okhttp3.Response;
 import utils.CommonUtil;
 import utils.OkhttpClientUtil;
 import utils.SPUtils;
+import utils.StreamUtils;
 import utils.ToastUtils;
 
 public class StorageInBackActivity extends  BaseActivity{
@@ -73,7 +74,7 @@ public class StorageInBackActivity extends  BaseActivity{
     Button reset;
     @BindView(R.id.nice_spiner)
     NiceSpinner niceSpinner;
-    private String url_con=SPUtils.get("url_con","").toString();
+    private String url_con;
     private String barcode="";
     private String info="";
     private String wareto;
@@ -244,13 +245,14 @@ public class StorageInBackActivity extends  BaseActivity{
         tv_center_title.setVisibility(View.VISIBLE);
         tv_center_title.setText("入库退货");
         iv_back.setVisibility(View.VISIBLE);
-
+        url_con= StreamUtils.read();
         registerReceiver(broadcastReceiver, new IntentFilter(ACTION_HONEYWLL));
         loadingDialog=   new ProgressDialog(StorageInBackActivity.this);
         loadingDialog.setTitle("获取库房信息");
         loadingDialog.setCancelable(false);
         loadingDialog.show();
-        String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
+        String url=url_con+"GetWarehouseID";
+       // String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/"+"GetWarehouseID";
         OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
         okHttpClient.newBuilder()
                 .connectTimeout(5, TimeUnit.SECONDS)
@@ -461,7 +463,8 @@ public class StorageInBackActivity extends  BaseActivity{
             loadingDialog.setTitle("正在上传数据");
             loadingDialog.setCancelable(false);
             loadingDialog.show();
-            String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/" + "SubmitReceiptBackIntoData";
+            String url =url_con+ "SubmitReceiptBackIntoData";
+                    // String url = "https://as-barcode.eftec.com.cn/WebServiceForSqlserver.asmx/" + "SubmitReceiptBackIntoData";
             OkHttpClient okHttpClient = OkhttpClientUtil.getUnsafeOkHttpClient();
             okHttpClient.newBuilder()
                     .connectTimeout(5, TimeUnit.SECONDS)
